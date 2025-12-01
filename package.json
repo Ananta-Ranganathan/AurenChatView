@@ -9,6 +9,19 @@
     "start": "react-native start",
     "test": "jest"
   },
+  "codegenConfig": {
+    "name": "AppSpec",
+    "type": "components",
+    "jsSrcsDir": "specs",
+    "android": {
+      "javaPackageName": "com.aurenchatview"
+    },
+    "ios": {
+      "componentProvider": {
+        "AurenChatView": "RCTChatView"
+      }
+    }
+  },
   "dependencies": {
     "react": "19.1.1",
     "react-native": "0.82.1",
