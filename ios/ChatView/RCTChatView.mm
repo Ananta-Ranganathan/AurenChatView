@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 
 #import "RCTChatView.h"
+#import "RCTChatMessageCell.h"
 
 #import <react/renderer/components/AppSpec/ComponentDescriptors.h>
 #import <react/renderer/components/AppSpec/EventEmitters.h>
@@ -15,105 +16,6 @@
 #import <react/renderer/components/AppSpec/RCTComponentViewHelpers.h>
 
 using namespace facebook::react;
-
-@interface RCTChatMessageCell : UICollectionViewCell
-
-@property(nonatomic, strong) UIView *bubbleView;
-@property(nonatomic, strong) UILabel *label;
-@property(nonatomic, strong) NSLayoutConstraint *leadingConstraint;
-@property(nonatomic, strong) NSLayoutConstraint *trailingConstraint;
-@property(nonatomic, strong) NSLayoutConstraint *maxWidthConstraint;
-
-@end
-
-@implementation RCTChatMessageCell
-
-- (instancetype)initWithFrame:(CGRect)frame
-{
-  if (self = [super initWithFrame:frame]) {
-    _bubbleView = [UIView new];
-    _bubbleView.translatesAutoresizingMaskIntoConstraints = NO;
-    _bubbleView.backgroundColor = [UIColor colorWithRed:0.2 green:0.4 blue:1.0 alpha:1.0];
-    _bubbleView.layer.cornerRadius = 20.0;
-    _bubbleView.layer.masksToBounds = YES;
-
-    _label = [UILabel new];
-    _label.translatesAutoresizingMaskIntoConstraints = NO;
-    _label.textColor = [UIColor whiteColor];
-    _label.numberOfLines = 0;
-    _label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
-
-    // Make bubble prefer to be as small as its contents allow
-    [_bubbleView setContentHuggingPriority:UILayoutPriorityRequired
-                                   forAxis:UILayoutConstraintAxisHorizontal];
-    [_bubbleView setContentCompressionResistancePriority:UILayoutPriorityRequired
-                                                 forAxis:UILayoutConstraintAxisHorizontal];
-
-    // (optional, but usually good)
-    [_label setContentHuggingPriority:UILayoutPriorityRequired
-                               forAxis:UILayoutConstraintAxisHorizontal];
-    [_label setContentCompressionResistancePriority:UILayoutPriorityRequired
-                                             forAxis:UILayoutConstraintAxisHorizontal];
-    _maxWidthConstraint = [_bubbleView.widthAnchor constraintLessThanOrEqualToConstant:1000];
-    _maxWidthConstraint.active = YES;
-
-    [_bubbleView addSubview:_label];
-    [self.contentView addSubview:_bubbleView];
-
-    const CGFloat bubbleVertical = 4.0;
-    const CGFloat bubbleHorizontal = 16.0;
-    const CGFloat labelPaddingVertical = 10.0;
-    const CGFloat labelPaddingHorizontal = 16.0;
-
-    _leadingConstraint = [_bubbleView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:bubbleHorizontal];
-    _trailingConstraint = [_bubbleView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-bubbleHorizontal];
-
-    [NSLayoutConstraint activateConstraints:@[
-      [_bubbleView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:bubbleVertical],
-      [_bubbleView.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-bubbleVertical],
-      [_label.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor constant:labelPaddingVertical],
-      [_label.bottomAnchor constraintEqualToAnchor:_bubbleView.bottomAnchor constant:-labelPaddingVertical],
-      [_label.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor constant:labelPaddingHorizontal],
-      [_label.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor constant:-labelPaddingHorizontal],
-    ]];
-  }
-  return self;
-}
-
-- (UICollectionViewLayoutAttributes *)preferredLayoutAttributesFittingAttributes:
-    (UICollectionViewLayoutAttributes *)layoutAttributes
-{
-  return layoutAttributes;
-}
-
-- (void)layoutSubviews
-{
-  [super layoutSubviews];
-
-  CGFloat contentWidth = self.contentView.bounds.size.width;
-  CGFloat maxBubbleWidth = contentWidth * 0.75;
-  CGFloat labelPaddingHorizontal = 16.0;
-
-  self.label.preferredMaxLayoutWidth =
-      maxBubbleWidth - 2 * labelPaddingHorizontal;
-}
-
-- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser
-{
-  self.label.text = text;
-  self.label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
-  
-  if (isUser) {
-    self.leadingConstraint.active = NO;
-    self.trailingConstraint.active = YES;
-    self.bubbleView.backgroundColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // Green for user
-  } else {
-    self.leadingConstraint.active = YES;
-    self.trailingConstraint.active = NO;
-    self.bubbleView.backgroundColor = [UIColor colorWithRed:0.2 green:0.4 blue:1.0 alpha:1.0]; // Blue for assistant
-  }
-}
-@end
 
 @interface RCTChatView ()
 <RCTComponentViewProtocol, RCTTouchableComponentViewProtocol,
@@ -171,6 +73,11 @@ using namespace facebook::react;
                selector:@selector(handleKeyboardNotification:)
                    name:UIKeyboardWillHideNotification
                  object:nil];
+    
+    _collectionView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapOutside:)];
+    tap.cancelsTouchesInView = NO;
+    [_collectionView addGestureRecognizer:tap];
   }
   return self;
 }
@@ -283,40 +190,27 @@ using namespace facebook::react;
   newIndicatorInsets.bottom = newBottomInset;
 
   CGFloat deltaBottom = newContentInsets.bottom - oldContentInsets.bottom;
+  CGPoint newOffset = _collectionView.contentOffset;
+
+  if (wasAtBottom) {
+      CGFloat newBottomOffset =
+          MAX(contentHeight + newContentInsets.bottom - visibleHeight,
+              -newContentInsets.top);
+      newOffset.y = newBottomOffset;
+  } else {
+      newOffset.y += deltaBottom;
+      if (newOffset.y < -newContentInsets.top) {
+          newOffset.y = -newContentInsets.top;
+      }
+  }
 
   [UIView animateWithDuration:duration
                         delay:0
                       options:curve
                    animations:^{
-                     if (!self) {
-                       return;
-                     }
-
-                     self->_collectionView.contentInset = newContentInsets;
-                     self->_collectionView.verticalScrollIndicatorInsets = newIndicatorInsets;
-
-                     CGPoint offset = self->_collectionView.contentOffset;
-
-                     if (wasAtBottom) {
-                       // Stay pinned to bottom: recompute bottom with new insets
-                       CGFloat newContentHeight = self->_collectionView.contentSize.height;
-                       CGFloat newVisibleHeight = self->_collectionView.bounds.size.height;
-                       CGFloat newBottomOffset =
-                           MAX(newContentHeight + newContentInsets.bottom - newVisibleHeight,
-                               -newContentInsets.top);
-                       offset.y = newBottomOffset;
-                     } else {
-                       // Preserve relative position by shifting with the inset change
-                       offset.y += deltaBottom;
-
-                       // Clamp at top
-                       if (offset.y < -newContentInsets.top) {
-                         offset.y = -newContentInsets.top;
-                       }
-                     }
-
-                     self->_collectionView.contentOffset = offset;
-                     [self layoutIfNeeded];
+                       self->_collectionView.contentInset = newContentInsets;
+                       self->_collectionView.verticalScrollIndicatorInsets = newIndicatorInsets;
+                       self->_collectionView.contentOffset = newOffset;
                    }
                    completion:nil];
 }
@@ -341,6 +235,26 @@ using namespace facebook::react;
   CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8; // 8 for bubble vertical margin
   
   return CGSizeMake(contentWidth, cellHeight);
+}
+
+- (void)handleTapOutside:(UITapGestureRecognizer *)recognizer
+{
+    CGPoint location = [recognizer locationInView:_collectionView];
+    NSIndexPath *indexPath = [_collectionView indexPathForItemAtPoint:location];
+    
+    if (indexPath == nil) {
+      NSLog(@"indexpath is nil, TODO REQUEST DISMISS KEYBOARD");
+        return;
+    }
+    
+    RCTChatMessageCell *cell = (RCTChatMessageCell *)[_collectionView cellForItemAtIndexPath:indexPath];
+    CGPoint pointInCell = [recognizer locationInView:cell];
+    
+    if (![cell.bubbleView pointInside:[cell.bubbleView convertPoint:pointInCell fromView:cell] withEvent:nil]) {
+      NSLog(@"tap was not inside a bubble TODO REQUEST DISMISS KEYBOARD");
+    } else {
+      NSLog(@"tap was inside a bubble");
+    }
 }
 
 +(ComponentDescriptorProvider)componentDescriptorProvider

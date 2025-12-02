@@ -7,6 +7,7 @@ export interface Message {
   text: string;
   isUser: boolean;
   readByCharacterAt?: CodegenTypes.Double;
+  isTypingIndicator?: boolean;
 }
 
 export interface NativeProps extends ViewProps {

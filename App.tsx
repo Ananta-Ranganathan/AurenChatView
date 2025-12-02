@@ -49,6 +49,25 @@ function AppContent() {
   const [messages, setMessages] = useState(initialMessages);
   const [draftText, setDraftText] = useState('');
 
+  const addMessage = () => {
+    const randomNumber = Math.floor(Math.random() * messages.length);
+    const pendingMsg = messages[randomNumber];
+    const typingIndicator: Message = {
+      uuid: pendingMsg.uuid,
+      isUser: pendingMsg.isUser,
+      text: '',
+      isTypingIndicator: true,
+    };
+    const currentMessages = messages;
+    setMessages([...messages, typingIndicator]);
+    setTimeout(() => {
+      setMessages([...currentMessages]);
+      setTimeout(() => {
+        setMessages([...currentMessages, pendingMsg]);
+      }, 100);
+    }, 100);
+  };
+
   return (
     <View style={[StyleSheet.absoluteFill, styles.container]}>
       <View
@@ -73,10 +92,9 @@ function AppContent() {
         <View style={styles.buttonsRow}>
           <Button title="Dismiss Keyboard" onPress={() => Keyboard.dismiss()} />
           <Button
-            title="Double Messages"
+            title="Add Message"
             onPress={() => {
-              setMessages(prevMessages => [...prevMessages, ...prevMessages]);
-              console.log(messages.length);
+              addMessage();
             }}
           />
         </View>
