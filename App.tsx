@@ -55,6 +55,7 @@ function AppContent() {
       ...messages[randomNumber],
       uuid: (Math.random() + 1).toString(36).substring(7),
     };
+    console.log(messages[randomNumber].uuid, pendingMsg.uuid);
     const typingIndicator: Message = {
       uuid: pendingMsg.uuid,
       isUser: pendingMsg.isUser,

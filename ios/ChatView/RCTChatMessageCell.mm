@@ -67,6 +67,10 @@
     UIContextMenuInteraction *interaction =
         [[UIContextMenuInteraction alloc] initWithDelegate:self];
     [_bubbleView addInteraction:interaction];
+    
+    self.alpha = 0;
+    self.transform = CGAffineTransformMakeTranslation(20, 0);
+    
   }
   return self;
 }
@@ -120,6 +124,13 @@
         }];
         return [UIMenu menuWithTitle:@"" children:@[copy]];
     }];
+}
+
+- (void)prepareForReuse
+{
+    [super prepareForReuse];
+    self.alpha = 0;
+    self.transform = CGAffineTransformMakeTranslation(20, 0);
 }
 
 @end

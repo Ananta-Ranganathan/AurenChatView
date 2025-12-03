@@ -90,7 +90,7 @@ using namespace facebook::react;
 }
 
 - (void)updateProps:(Props::Shared const &)props
-          oldProps:(Props::Shared const &)oldProps
+           oldProps:(Props::Shared const &)oldProps
 {
   if (!props) {
     [super updateProps:props oldProps:oldProps];
@@ -100,14 +100,14 @@ using namespace facebook::react;
   const auto &newViewProps =
       *std::static_pointer_cast<AurenChatViewProps const>(props);
 
-  // Copy messages into native storage
-  _messages.clear();
-  _messages.reserve(newViewProps.messages.size());
+  // Build new messages vector
+  std::vector<AurenChatViewMessagesStruct> newMessages;
+  newMessages.reserve(newViewProps.messages.size());
   for (const auto &msg : newViewProps.messages) {
-    _messages.push_back(msg);
+    newMessages.push_back(msg);
   }
 
-  // Check if we're at the bottom before reload
+  // Check if we're at the bottom before changes
   CGFloat contentHeight = _collectionView.contentSize.height;
   CGFloat visibleHeight = _collectionView.bounds.size.height;
   UIEdgeInsets insets = _collectionView.contentInset;
@@ -115,18 +115,76 @@ using namespace facebook::react;
   CGFloat currentOffsetY = _collectionView.contentOffset.y;
   BOOL wasAtBottom = (contentHeight <= visibleHeight) || (currentOffsetY >= bottomOffset - 2.0);
 
-  // For now, just reload everything. Later we will do diffing + batch updates.
-  [_collectionView reloadData];
-  
-  if (wasAtBottom && _messages.size() > 0) {
-      [_collectionView layoutIfNeeded];
-      CGFloat newContentHeight = _collectionView.contentSize.height;
-      CGFloat newVisibleHeight = _collectionView.bounds.size.height;
-      UIEdgeInsets newInsets = _collectionView.contentInset;
-      CGFloat newBottomOffset = MAX(newContentHeight + newInsets.bottom - newVisibleHeight, -newInsets.top);
-      [_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
+  // Build UUID lookup for old messages
+  std::unordered_map<std::string, NSInteger> oldIndexByUUID;
+  for (NSInteger i = 0; i < (NSInteger)_messages.size(); i++) {
+    oldIndexByUUID[_messages[i].uuid] = i;
   }
-  
+
+  // Build UUID lookup for new messages
+  std::unordered_map<std::string, NSInteger> newIndexByUUID;
+  for (NSInteger i = 0; i < (NSInteger)newMessages.size(); i++) {
+    newIndexByUUID[newMessages[i].uuid] = i;
+  }
+
+  // Find deletes, inserts, and reloads
+  NSMutableArray<NSIndexPath *> *toDelete = [NSMutableArray new];
+  NSMutableArray<NSIndexPath *> *toInsert = [NSMutableArray new];
+  NSMutableArray<NSIndexPath *> *toReload = [NSMutableArray new];
+
+  // Check for deletions (in old but not in new)
+  for (NSInteger i = 0; i < (NSInteger)_messages.size(); i++) {
+    if (newIndexByUUID.find(_messages[i].uuid) == newIndexByUUID.end()) {
+      [toDelete addObject:[NSIndexPath indexPathForItem:i inSection:0]];
+    }
+  }
+
+  // Check for insertions and updates
+  for (NSInteger i = 0; i < (NSInteger)newMessages.size(); i++) {
+    auto it = oldIndexByUUID.find(newMessages[i].uuid);
+    if (it == oldIndexByUUID.end()) {
+      // New message
+      [toInsert addObject:[NSIndexPath indexPathForItem:i inSection:0]];
+    } else {
+      // Existing message - check if text changed
+      NSInteger oldIndex = it->second;
+      if (_messages[oldIndex].text != newMessages[i].text ||
+          _messages[oldIndex].isTypingIndicator != newMessages[i].isTypingIndicator) {
+        [toReload addObject:[NSIndexPath indexPathForItem:i inSection:0]];
+      }
+    }
+  }
+
+  if (toDelete.count > 0 || toInsert.count > 0 || toReload.count > 0) {
+    [_collectionView performBatchUpdates:^{
+      self->_messages = std::move(newMessages);
+      
+      if (toDelete.count > 0) {
+        [self->_collectionView deleteItemsAtIndexPaths:toDelete];
+      }
+      if (toInsert.count > 0) {
+        [self->_collectionView insertItemsAtIndexPaths:toInsert];
+      }
+      if (toReload.count > 0) {
+        [self->_collectionView reloadItemsAtIndexPaths:toReload];
+      }
+    } completion:^(BOOL finished) {
+      if (wasAtBottom && self->_messages.size() > 0) {
+          CGFloat newContentHeight = self->_collectionView.contentSize.height;
+          CGFloat newVisibleHeight = self->_collectionView.bounds.size.height;
+          
+          // Only scroll if content is taller than visible area
+          if (newContentHeight > newVisibleHeight) {
+              UIEdgeInsets newInsets = self->_collectionView.contentInset;
+              CGFloat newBottomOffset = newContentHeight + newInsets.bottom - newVisibleHeight;
+              [self->_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
+          }
+      }
+    }];
+  } else {
+    _messages = std::move(newMessages);
+  }
+
   [super updateProps:props oldProps:oldProps];
 }
 
@@ -292,6 +350,34 @@ using namespace facebook::react;
     } else {
       NSLog(@"tap was inside a bubble");
     }
+}
+
+- (void)collectionView:(UICollectionView *)collectionView
+       willDisplayCell:(UICollectionViewCell *)cell
+    forItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    // Only animate newly inserted cells, not cells appearing from scrolling
+    // You might want to track which indices were just inserted
+    
+    cell.alpha = 0;
+    cell.transform = CGAffineTransformMakeTranslation(20, 0);
+    
+  dispatch_async(dispatch_get_main_queue(), ^{
+      [UIView animateWithDuration:0.75
+                            delay:0
+                          options:UIViewAnimationOptionCurveEaseOut
+                       animations:^{
+          cell.transform = CGAffineTransformIdentity;
+      } completion:nil];
+    NSLog(@"alpha before animation: %f", cell.alpha);
+    cell.alpha = 0;
+      [UIView animateWithDuration:0.75
+                            delay:0
+                          options:UIViewAnimationOptionCurveEaseOut
+                       animations:^{
+          cell.alpha = 1;
+      } completion:nil];
+  });
 }
 
 +(ComponentDescriptorProvider)componentDescriptorProvider
