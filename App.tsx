@@ -61,11 +61,8 @@ function AppContent() {
     const currentMessages = messages;
     setMessages([...messages, typingIndicator]);
     setTimeout(() => {
-      setMessages([...currentMessages]);
-      setTimeout(() => {
-        setMessages([...currentMessages, pendingMsg]);
-      }, 100);
-    }, 100);
+      setMessages([...currentMessages, pendingMsg]);
+    }, 500);
   };
 
   return (

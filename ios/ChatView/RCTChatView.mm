@@ -9,6 +9,7 @@
 
 #import "RCTChatView.h"
 #import "RCTChatMessageCell.h"
+#import "RCTTypingIndicatorCell.h"
 
 #import <react/renderer/components/AppSpec/ComponentDescriptors.h>
 #import <react/renderer/components/AppSpec/EventEmitters.h>
@@ -50,6 +51,8 @@ using namespace facebook::react;
 
     [_collectionView registerClass:[RCTChatMessageCell class]
         forCellWithReuseIdentifier:@"RCTChatMessageCell"];
+    [_collectionView registerClass:[RCTTypingIndicatorCell class]
+        forCellWithReuseIdentifier:@"RCTTypingIndicatorCell"];
 
     [self addSubview:_collectionView];
 
@@ -104,9 +107,26 @@ using namespace facebook::react;
     _messages.push_back(msg);
   }
 
+  // Check if we're at the bottom before reload
+  CGFloat contentHeight = _collectionView.contentSize.height;
+  CGFloat visibleHeight = _collectionView.bounds.size.height;
+  UIEdgeInsets insets = _collectionView.contentInset;
+  CGFloat bottomOffset = MAX(contentHeight + insets.bottom - visibleHeight, -insets.top);
+  CGFloat currentOffsetY = _collectionView.contentOffset.y;
+  BOOL wasAtBottom = (contentHeight <= visibleHeight) || (currentOffsetY >= bottomOffset - 2.0);
+
   // For now, just reload everything. Later we will do diffing + batch updates.
   [_collectionView reloadData];
-
+  
+  if (wasAtBottom && _messages.size() > 0) {
+      [_collectionView layoutIfNeeded];
+      CGFloat newContentHeight = _collectionView.contentSize.height;
+      CGFloat newVisibleHeight = _collectionView.bounds.size.height;
+      UIEdgeInsets newInsets = _collectionView.contentInset;
+      CGFloat newBottomOffset = MAX(newContentHeight + newInsets.bottom - newVisibleHeight, -newInsets.top);
+      [_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
+  }
+  
   [super updateProps:props oldProps:oldProps];
 }
 
@@ -133,17 +153,26 @@ using namespace facebook::react;
 - (__kindof UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                           cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
+  const auto &msg = _messages[(size_t)indexPath.item];
+  
+  if (msg.isTypingIndicator) {
+    RCTTypingIndicatorCell *cell =
+        [collectionView dequeueReusableCellWithReuseIdentifier:@"RCTTypingIndicatorCell"
+                                                  forIndexPath:indexPath];
+    [cell configureWithIsUser:msg.isUser];
+    [cell startAnimating];
+    return cell;
+  }
+  
   RCTChatMessageCell *cell =
       [collectionView dequeueReusableCellWithReuseIdentifier:@"RCTChatMessageCell"
                                                 forIndexPath:indexPath];
 
-  const auto &msg = _messages[(size_t)indexPath.item];
   NSString *text = [NSString stringWithUTF8String:msg.text.c_str()];
   [cell configureWithText:text isUser:msg.isUser];
 
   return cell;
 }
-
 - (void)handleKeyboardNotification:(NSNotification *)notification
 {
   NSDictionary *userInfo = notification.userInfo;
@@ -219,23 +248,31 @@ using namespace facebook::react;
                   layout:(UICollectionViewLayout *)layout
   sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-  NSString *text = [NSString stringWithUTF8String:_messages[indexPath.item].text.c_str()];
-  
-  CGFloat contentWidth = collectionView.bounds.size.width;
-  CGFloat maxBubbleWidth = contentWidth * 0.75;
-  CGFloat labelPaddingHorizontal = 16.0;
-  CGFloat labelPaddingVertical = 10.0;
-  CGFloat maxLabelWidth = maxBubbleWidth - 2 * labelPaddingHorizontal;
-  
-  CGRect textRect = [text boundingRectWithSize:CGSizeMake(maxLabelWidth, CGFLOAT_MAX)
-                                       options:NSStringDrawingUsesLineFragmentOrigin
-                                    attributes:@{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody]}
-                                       context:nil];
-  
-  CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8; // 8 for bubble vertical margin
-  
-  return CGSizeMake(contentWidth, cellHeight);
-}
+  const auto &msg = _messages[(size_t)indexPath.item];
+    CGFloat contentWidth = collectionView.bounds.size.width;
+    
+  if (msg.isTypingIndicator) {
+    CGFloat textHeight = [UIFont preferredFontForTextStyle:UIFontTextStyleBody].lineHeight;
+    CGFloat cellHeight = ceil(textHeight) + 2 * 10.0 + 8.0;
+    return CGSizeMake(contentWidth, cellHeight);
+  }
+    
+    NSString *text = [NSString stringWithUTF8String:msg.text.c_str()];
+    
+    CGFloat maxBubbleWidth = contentWidth * 0.75;
+    CGFloat labelPaddingHorizontal = 16.0;
+    CGFloat labelPaddingVertical = 10.0;
+    CGFloat maxLabelWidth = maxBubbleWidth - 2 * labelPaddingHorizontal;
+    
+    CGRect textRect = [text boundingRectWithSize:CGSizeMake(maxLabelWidth, CGFLOAT_MAX)
+                                         options:NSStringDrawingUsesLineFragmentOrigin
+                                      attributes:@{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody]}
+                                         context:nil];
+    
+    CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8;
+    
+    return CGSizeMake(contentWidth, cellHeight);
+  }
 
 - (void)handleTapOutside:(UITapGestureRecognizer *)recognizer
 {

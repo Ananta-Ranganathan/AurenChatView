@@ -13,6 +13,7 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		F313C8C22EDF6958002442C1 /* RCTChatMessageCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = F313C8C12EDF6958002442C1 /* RCTChatMessageCell.mm */; };
+		F313C8CE2EDFB426002442C1 /* RCTTypingIndicatorCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = F313C8CD2EDFB426002442C1 /* RCTTypingIndicatorCell.mm */; };
 		F38F59202ED4EEBD00F86FA0 /* RCTChatView.mm in Sources */ = {isa = PBXBuildFile; fileRef = F38F591F2ED4EEBD00F86FA0 /* RCTChatView.mm */; };
 		F865852754435E522CC8815D /* libPods-AurenChatView-AurenChatViewTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B3FF16A683F0C726C1C2078C /* libPods-AurenChatView-AurenChatViewTests.a */; };
 /* End PBXBuildFile section */
@@ -43,6 +44,8 @@
 		EF3FA8D9C65743DD7415AE1D /* Pods-AurenChatViewTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AurenChatViewTests.debug.xcconfig"; path = "Target Support Files/Pods-AurenChatViewTests/Pods-AurenChatViewTests.debug.xcconfig"; sourceTree = "<group>"; };
 		F313C8C12EDF6958002442C1 /* RCTChatMessageCell.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = RCTChatMessageCell.mm; sourceTree = "<group>"; };
 		F313C8C32EDF699C002442C1 /* RCTChatMessageCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTChatMessageCell.h; sourceTree = "<group>"; };
+		F313C8CC2EDFB407002442C1 /* RCTTypingIndicatorCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTTypingIndicatorCell.h; sourceTree = "<group>"; };
+		F313C8CD2EDFB426002442C1 /* RCTTypingIndicatorCell.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RCTTypingIndicatorCell.mm; sourceTree = "<group>"; };
 		F38F591E2ED4EEBD00F86FA0 /* AurenChatView-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AurenChatView-Bridging-Header.h"; sourceTree = "<group>"; };
 		F38F591F2ED4EEBD00F86FA0 /* RCTChatView.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = RCTChatView.mm; sourceTree = "<group>"; };
 		F38F59212ED4EECC00F86FA0 /* RCTChatView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RCTChatView.h; sourceTree = "<group>"; };
@@ -54,8 +57,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F38F593A2EDE10A000F86FA0 /* AurenChatViewTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = AurenChatViewTests;
 			sourceTree = "<group>";
 		};
@@ -156,6 +157,8 @@
 				F38F591E2ED4EEBD00F86FA0 /* AurenChatView-Bridging-Header.h */,
 				F38F59212ED4EECC00F86FA0 /* RCTChatView.h */,
 				F313C8C12EDF6958002442C1 /* RCTChatMessageCell.mm */,
+				F313C8CC2EDFB407002442C1 /* RCTTypingIndicatorCell.h */,
+				F313C8CD2EDFB426002442C1 /* RCTTypingIndicatorCell.mm */,
 			);
 			path = ChatView;
 			sourceTree = "<group>";
@@ -290,9 +293,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView/Pods-AurenChatView-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView/Pods-AurenChatView-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -307,9 +314,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView-AurenChatViewTests/Pods-AurenChatView-AurenChatViewTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView-AurenChatViewTests/Pods-AurenChatView-AurenChatViewTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -368,9 +379,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView-AurenChatViewTests/Pods-AurenChatView-AurenChatViewTests-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView-AurenChatViewTests/Pods-AurenChatView-AurenChatViewTests-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -385,9 +400,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView/Pods-AurenChatView-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView/Pods-AurenChatView-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -401,6 +420,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F313C8CE2EDFB426002442C1 /* RCTTypingIndicatorCell.mm in Sources */,
 				F38F59202ED4EEBD00F86FA0 /* RCTChatView.mm in Sources */,
 				F313C8C22EDF6958002442C1 /* RCTChatMessageCell.mm in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
