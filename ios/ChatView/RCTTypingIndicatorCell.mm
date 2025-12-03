@@ -8,6 +8,7 @@
   BOOL _isAnimating;
   NSLayoutConstraint *_leadingConstraint;
   NSLayoutConstraint *_trailingConstraint;
+  NSInteger _animationGeneration;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -41,6 +42,8 @@
     
     _leadingConstraint = [_bubbleView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:16.0];
     _trailingConstraint = [_bubbleView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-16.0];
+    NSLayoutConstraint *dotsHeightConstraint = [_dotsContainer.heightAnchor constraintEqualToConstant:[UIFont preferredFontForTextStyle:UIFontTextStyleBody].lineHeight];
+    dotsHeightConstraint.priority = UILayoutPriorityDefaultHigh;
     
     [NSLayoutConstraint activateConstraints:@[
       // Bubble vertical positioning
@@ -71,10 +74,8 @@
       [_dot1.centerYAnchor constraintEqualToAnchor:_dotsContainer.centerYAnchor],
       [_dot2.centerYAnchor constraintEqualToAnchor:_dotsContainer.centerYAnchor],
       [_dot3.centerYAnchor constraintEqualToAnchor:_dotsContainer.centerYAnchor],
-      
-      // Container height from dots
-      [_dotsContainer.heightAnchor constraintEqualToConstant:[UIFont preferredFontForTextStyle:UIFontTextStyleBody].lineHeight],
     ]];
+    dotsHeightConstraint.active = YES;
   }
   return self;
 }
@@ -85,7 +86,6 @@
   dot.translatesAutoresizingMaskIntoConstraints = NO;
   dot.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.9];
   dot.layer.cornerRadius = 3.0;
-  dot.transform = CGAffineTransformMakeScale(0.0, 0.0);
   return dot;
 }
 
@@ -106,62 +106,54 @@
 {
   if (_isAnimating) return;
   _isAnimating = YES;
+  _animationGeneration++;
+  NSInteger generation = _animationGeneration;
   
-  // Reset to scale 0
-  _dot1.transform = CGAffineTransformMakeScale(0.0, 0.0);
-  _dot2.transform = CGAffineTransformMakeScale(0.0, 0.0);
-  _dot3.transform = CGAffineTransformMakeScale(0.0, 0.0);
-  
-  [self animateDot:_dot1 withDelay:0.0];
-  [self animateDot:_dot2 withDelay:0.2];
-  [self animateDot:_dot3 withDelay:0.4];
-}
-
-- (void)animateDot:(UIView *)dot withDelay:(NSTimeInterval)delay
-{
-  if (!_isAnimating) return;
-  
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    if (!self->_isAnimating) return;
-    [self runScaleCycleForDot:dot];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (!self->_isAnimating || self->_animationGeneration != generation) return;
+    [self animateDot:self->_dot1 withDelay:0.0 generation:generation];
+    [self animateDot:self->_dot2 withDelay:0.2 generation:generation];
+    [self animateDot:self->_dot3 withDelay:0.4 generation:generation];
   });
 }
 
-- (void)runScaleCycleForDot:(UIView *)dot
+- (void)animateDot:(UIView *)dot withDelay:(NSTimeInterval)delay generation:(NSInteger)generation
 {
-  if (!_isAnimating) return;
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    if (!self->_isAnimating || self->_animationGeneration != generation) return;
+    dot.transform = CGAffineTransformMakeScale(0.5, 0.5);
+    [self runScaleCycleForDot:dot generation:generation];
+  });
+}
+
+- (void)runScaleCycleForDot:(UIView *)dot generation:(NSInteger)generation
+{
+  if (!_isAnimating || _animationGeneration != generation) return;
   
-  // Scale up with spring-like easing
-  [UIView animateWithDuration:0.4
-                        delay:0
-       usingSpringWithDamping:0.6
-        initialSpringVelocity:0
-                      options:UIViewAnimationOptionCurveEaseOut
+  [UIView animateWithDuration:0.3
                    animations:^{
     dot.transform = CGAffineTransformMakeScale(1.0, 1.0);
   } completion:^(BOOL finished) {
-    if (!self->_isAnimating) return;
+    if (!self->_isAnimating || !finished || self->_animationGeneration != generation) return;
     
-    // Scale down
-    [UIView animateWithDuration:0.4
-                          delay:0
-         usingSpringWithDamping:0.6
-          initialSpringVelocity:0
-                        options:UIViewAnimationOptionCurveEaseOut
+    [UIView animateWithDuration:0.3
                      animations:^{
-      dot.transform = CGAffineTransformMakeScale(0.0, 0.0);
+      dot.transform = CGAffineTransformMakeScale(0.5, 0.5);
     } completion:^(BOOL finished) {
-      if (!self->_isAnimating) return;
-      
-      // Repeat
-      [self runScaleCycleForDot:dot];
+      if (!self->_isAnimating || !finished || self->_animationGeneration != generation) return;
+      [self runScaleCycleForDot:dot generation:generation];
     }];
   }];
 }
-
 - (void)stopAnimating
 {
   _isAnimating = NO;
+  [_dot1.layer removeAllAnimations];
+  [_dot2.layer removeAllAnimations];
+  [_dot3.layer removeAllAnimations];
+  _dot1.transform = CGAffineTransformIdentity;
+  _dot2.transform = CGAffineTransformIdentity;
+  _dot3.transform = CGAffineTransformIdentity;
   _dot1.transform = CGAffineTransformMakeScale(0.0, 0.0);
   _dot2.transform = CGAffineTransformMakeScale(0.0, 0.0);
   _dot3.transform = CGAffineTransformMakeScale(0.0, 0.0);

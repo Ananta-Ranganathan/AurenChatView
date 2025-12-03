@@ -50,8 +50,11 @@ function AppContent() {
   const [draftText, setDraftText] = useState('');
 
   const addMessage = () => {
-    const randomNumber = Math.floor(Math.random() * messages.length);
-    const pendingMsg = messages[randomNumber];
+    const randomNumber = Math.floor(Math.random() * 4);
+    const pendingMsg = {
+      ...messages[randomNumber],
+      uuid: (Math.random() + 1).toString(36).substring(7),
+    };
     const typingIndicator: Message = {
       uuid: pendingMsg.uuid,
       isUser: pendingMsg.isUser,
@@ -62,7 +65,7 @@ function AppContent() {
     setMessages([...messages, typingIndicator]);
     setTimeout(() => {
       setMessages([...currentMessages, pendingMsg]);
-    }, 500);
+    }, 1000);
   };
 
   return (
