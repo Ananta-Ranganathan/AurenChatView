@@ -19,16 +19,31 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AurenChatViewNativeComponent, {
   Message,
 } from './specs/AurenChatViewNativeComponent';
+const gradientThemes: Record<string, [string, string]> = {
+  // Row 1 - Warm and red/pink
+  peach: ['#FF8B88', '#FF6A88'],
+  rose: ['#FF7676', '#F54EA2'],
+  cherry: ['#EB3349', '#F45C43'],
 
+  // Row 2 - Slightly less warm
+  honey: ['#E58E26', '#EEA23C'],
+  berry: ['#B76CD9', '#D67DB8'],
+  mint: ['#1D976C', '#2F8A69'],
+
+  // Row 3 - Cool and blue
+  twilight: ['#6157FF', '#7E6AFD'],
+  ocean: ['#2193b0', '#52B1CC'],
+  cosmic: ['#614385', '#5B5B8F'],
+
+  // Row 4 - Dark and neutral
+  silver: ['#E9E9E9', '#E9E9E9'],
+  shadow: ['#2C3E50', '#2C3E50'],
+  midnight: ['#1E1E1E', '#1E1E1E'],
+} as const;
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
 
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
+  return <AppContent />;
 }
 
 function AppContent() {
@@ -74,6 +89,17 @@ function AppContent() {
     }, 1000);
   };
 
+  const themeKeys = Object.keys(gradientThemes);
+  const [themeIndex, setThemeIndex] = useState(0);
+  const [theme, setTheme] = useState(themeKeys[0]);
+
+  const stepTheme = () => {
+    console.log(theme);
+    const nextIndex = (themeIndex + 1) % themeKeys.length;
+    setThemeIndex(nextIndex);
+    setTheme(themeKeys[nextIndex]);
+  };
+
   return (
     <View style={[StyleSheet.absoluteFill, styles.container]}>
       <View
@@ -96,13 +122,9 @@ function AppContent() {
           onChangeText={setDraftText}
         />
         <View style={styles.buttonsRow}>
-          <Button title="Dismiss Keyboard" onPress={() => Keyboard.dismiss()} />
-          <Button
-            title="Add Message"
-            onPress={() => {
-              addMessage();
-            }}
-          />
+          <Button title="dismiss" onPress={() => Keyboard.dismiss()} />
+          <Button title="theme" onPress={stepTheme} />
+          <Button title="add" onPress={addMessage} />
         </View>
       </KeyboardAvoidingView>
     </View>
