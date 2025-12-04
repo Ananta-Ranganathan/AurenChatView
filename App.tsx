@@ -48,8 +48,18 @@ function App() {
 
 function AppContent() {
   const initialMessages: Message[] = [
-    { uuid: '1', isUser: false, text: 'hi there\n' },
-    { uuid: '2', isUser: true, text: 'hi back\n' },
+    { uuid: '1', isUser: false, text: 'hi there' },
+    {
+      uuid: '2',
+      isUser: true,
+      text: '',
+      images: [
+        {
+          publicUrl:
+            'https://www.nme.com/wp-content/uploads/2024/01/le-sserafim-huh-yun-jin-solo-single-past-versions.jpg',
+        },
+      ],
+    },
     {
       uuid: '3',
       isUser: false,
@@ -128,6 +138,7 @@ function AppContent() {
           placeholderTextColor="#666"
           value={draftText}
           onChangeText={setDraftText}
+          multiline
         />
         <View style={styles.buttonsRow}>
           <Button title="dismiss" onPress={() => Keyboard.dismiss()} />
@@ -154,6 +165,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: '#fff',
+    maxHeight: 80,
   },
   buttonsRow: {
     flexDirection: 'row',

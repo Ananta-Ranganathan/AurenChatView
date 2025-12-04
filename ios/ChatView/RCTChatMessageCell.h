@@ -24,9 +24,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UIImageView *readReceiptImageView;
 @property (nonatomic, strong) NSLayoutConstraint *labelTrailingConstraint;
 @property (nonatomic, strong) CAGradientLayer *gradientLayer;
+@property (nonatomic, strong) UIStackView *imageStackView;
+@property (nonatomic, copy) void (^onImageTapped)(NSInteger imageIndex, CGRect frameInWindow);
+@property (nonatomic, strong) NSLayoutConstraint *minWidthConstraint;
 
 
 - (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor*)gradientStart gradientEnd:(UIColor*)gradientEnd;
+- (void)configureWithImages:(NSArray<NSDictionary *> *)images;
 
 @end
 

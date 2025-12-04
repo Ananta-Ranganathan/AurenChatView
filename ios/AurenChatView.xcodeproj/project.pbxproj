@@ -57,6 +57,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F38F593A2EDE10A000F86FA0 /* AurenChatViewTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = AurenChatViewTests;
 			sourceTree = "<group>";
 		};
@@ -293,13 +295,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView/Pods-AurenChatView-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView/Pods-AurenChatView-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -314,13 +312,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView-AurenChatViewTests/Pods-AurenChatView-AurenChatViewTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView-AurenChatViewTests/Pods-AurenChatView-AurenChatViewTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -379,13 +373,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView-AurenChatViewTests/Pods-AurenChatView-AurenChatViewTests-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView-AurenChatViewTests/Pods-AurenChatView-AurenChatViewTests-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -400,13 +390,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView/Pods-AurenChatView-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-AurenChatView/Pods-AurenChatView-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

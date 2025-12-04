@@ -261,6 +261,35 @@ UIColor *colorFromHex(const std::string &hex) {
   NSString *text = [NSString stringWithUTF8String:msg.text.c_str()];
   [cell configureWithText:text isUser:msg.isUser sameAsPrevious:sameAsPrevious readByCharacterAt:msg.readByCharacterAt      gradientStart:_botGradientStart gradientEnd:_botGradientEnd];
 
+  // Convert C++ images to NSArray
+  NSMutableArray<NSDictionary *> *images = [NSMutableArray new];
+  for (const auto &img : msg.images) {
+    NSMutableDictionary *dict = [NSMutableDictionary new];
+    if (!img.publicUrl.empty()) {
+      dict[@"public_url"] = [NSString stringWithUTF8String:img.publicUrl.c_str()];
+    }
+    [images addObject:dict];
+  }
+  [cell configureWithImages:images];
+
+  // Set up tap callback to emit event
+//  NSString *messageUuid = [NSString stringWithUTF8String:msg.uuid.c_str()];
+//  cell.onImageTapped = ^(NSInteger imageIndex, CGRect frameInWindow) {
+//    if (self->_eventEmitter) {
+//      auto emitter = std::dynamic_pointer_cast<const AurenChatViewEventEmitter>(self->_eventEmitter);
+//      if (emitter) {
+//        emitter->onImagePress({
+//          .messageUuid = std::string([messageUuid UTF8String]),
+//          .imageIndex = static_cast<int>(imageIndex),
+//          .x = frameInWindow.origin.x,
+//          .y = frameInWindow.origin.y,
+//          .width = frameInWindow.size.width,
+//          .height = frameInWindow.size.height,
+//        });
+//      }
+//    }
+//  };
+  
   return cell;
 }
 - (void)handleKeyboardNotification:(NSNotification *)notification

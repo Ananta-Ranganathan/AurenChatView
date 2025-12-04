@@ -44,6 +44,14 @@
                                              forAxis:UILayoutConstraintAxisHorizontal];
     _maxWidthConstraint = [_bubbleView.widthAnchor constraintLessThanOrEqualToConstant:1000];
     _maxWidthConstraint.active = YES;
+    _minWidthConstraint = [_bubbleView.widthAnchor constraintGreaterThanOrEqualToConstant:200.0];
+    _minWidthConstraint.active = NO;
+    _imageStackView = [[UIStackView alloc] init];
+    _imageStackView.translatesAutoresizingMaskIntoConstraints = NO;
+    _imageStackView.axis = UILayoutConstraintAxisVertical;
+    _imageStackView.spacing = 4.0;
+    _imageStackView.alignment = UIStackViewAlignmentFill;
+    [_bubbleView addSubview:_imageStackView];
 
     [_bubbleView addSubview:_label];
     [self.contentView addSubview:_bubbleView];
@@ -61,7 +69,12 @@
     [NSLayoutConstraint activateConstraints:@[
       _topConstraint,
       [_bubbleView.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-bubbleVertical],
-      [_label.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor constant:labelPaddingVertical],
+      // Image stack at top of bubble, full width, no horizontal padding (images go edge to edge)
+      [_imageStackView.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor],
+      [_imageStackView.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor],
+      [_imageStackView.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor],
+      // Label below images
+      [_label.topAnchor constraintEqualToAnchor:_imageStackView.bottomAnchor constant:labelPaddingVertical],
       [_label.bottomAnchor constraintEqualToAnchor:_bubbleView.bottomAnchor constant:-labelPaddingVertical],
       [_label.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor constant:labelPaddingHorizontal],
     ]];
@@ -164,6 +177,78 @@
         }];
         return [UIMenu menuWithTitle:@"" children:@[copy]];
     }];
+}
+
+- (void)configureWithImages:(NSArray<NSDictionary *> *)images
+{
+  // Clear existing image views
+  for (UIView *subview in [_imageStackView.arrangedSubviews copy]) {
+    [_imageStackView removeArrangedSubview:subview];
+    [subview removeFromSuperview];
+  }
+  
+  _minWidthConstraint.active = (images.count > 0);
+
+  if (images.count == 0) {
+    return;
+  }
+  
+  for (NSInteger i = 0; i < (NSInteger)images.count; i++) {
+    NSDictionary *imageData = images[i];
+    NSString *urlString = imageData[@"public_url"];
+    NSNumber *width = imageData[@"processed_width"];
+    NSNumber *height = imageData[@"processed_height"];
+    
+    if (!urlString) continue;
+    
+    UIImageView *imageView = [[UIImageView alloc] init];
+    imageView.translatesAutoresizingMaskIntoConstraints = NO;
+    imageView.contentMode = UIViewContentModeScaleAspectFill;
+    imageView.clipsToBounds = YES;
+    imageView.userInteractionEnabled = YES;
+    imageView.tag = i; // Store index for tap handler
+    
+    // Calculate aspect ratio for height constraint
+    CGFloat aspectRatio = 1.0;
+    if (width && height && [width floatValue] > 0) {
+      aspectRatio = [height floatValue] / [width floatValue];
+    }
+    
+    // Constrain height based on aspect ratio
+    [imageView.heightAnchor constraintEqualToAnchor:imageView.widthAnchor multiplier:aspectRatio].active = YES;
+    
+    // Add tap gesture
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleImageTap:)];
+    [imageView addGestureRecognizer:tap];
+    
+    [_imageStackView addArrangedSubview:imageView];
+    
+    // Load image asynchronously
+    NSURL *url = [NSURL URLWithString:urlString];
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+      if (data && !error) {
+        UIImage *image = [UIImage imageWithData:data];
+        dispatch_async(dispatch_get_main_queue(), ^{
+          imageView.image = image;
+        });
+      }
+    }];
+    [task resume];
+  }
+}
+
+- (void)handleImageTap:(UITapGestureRecognizer *)recognizer
+{
+  UIView *imageView = recognizer.view;
+  NSInteger index = imageView.tag;
+  
+  // Convert frame to window coordinates (like your JS measure callback)
+  UIWindow *window = self.window;
+  CGRect frameInWindow = [imageView convertRect:imageView.bounds toView:window];
+  
+  if (self.onImageTapped) {
+    self.onImageTapped(index, frameInWindow);
+  }
 }
 
 @end

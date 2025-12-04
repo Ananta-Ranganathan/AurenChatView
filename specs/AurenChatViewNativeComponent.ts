@@ -8,12 +8,18 @@ export interface ThemeConfiguration {
   color2: string;
 }
 
+export interface ImageData {
+  publicUrl?: string;
+  original_filename?: string;
+}
+
 export interface Message {
   uuid: string;
   text: string;
   isUser: boolean;
   readByCharacterAt?: CodegenTypes.Double;
   isTypingIndicator?: boolean;
+  images?: ImageData[];
 }
 
 export interface NativeProps extends ViewProps {
