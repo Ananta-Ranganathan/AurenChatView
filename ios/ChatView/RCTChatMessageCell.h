@@ -23,8 +23,10 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSLayoutConstraint *topConstraint;
 @property (nonatomic, strong) UIImageView *readReceiptImageView;
 @property (nonatomic, strong) NSLayoutConstraint *labelTrailingConstraint;
+@property (nonatomic, strong) CAGradientLayer *gradientLayer;
 
-- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt;;
+
+- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor*)gradientStart gradientEnd:(UIColor*)gradientEnd;
 
 @end
 

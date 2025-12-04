@@ -14,7 +14,7 @@
 
 @property (nonatomic, strong) UIView *bubbleView;
 
-- (void)configureWithIsUser:(BOOL)isUser;
+- (void)configureWithIsUser:(BOOL)isUser gradientStart:(UIColor *)gradientStart gradientEnd:(UIColor *)gradientEnd;
 - (void)startAnimating;
 - (void)stopAnimating;
 

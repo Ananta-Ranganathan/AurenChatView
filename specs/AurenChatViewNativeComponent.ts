@@ -2,6 +2,12 @@ import type { HostComponent, ViewProps } from 'react-native';
 import { codegenNativeComponent } from 'react-native';
 import { CodegenTypes } from 'react-native';
 
+export interface ThemeConfiguration {
+  mode: string;
+  color1: string;
+  color2: string;
+}
+
 export interface Message {
   uuid: string;
   text: string;
@@ -12,6 +18,7 @@ export interface Message {
 
 export interface NativeProps extends ViewProps {
   messages: Message[];
+  theme: ThemeConfiguration;
 }
 
 export default codegenNativeComponent<NativeProps>(

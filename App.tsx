@@ -108,7 +108,15 @@ function AppContent() {
           justifyContent: 'center',
         }}
       >
-        <AurenChatViewNativeComponent messages={messages} style={{ flex: 1 }} />
+        <AurenChatViewNativeComponent
+          messages={messages}
+          theme={{
+            mode: '#000000',
+            color1: gradientThemes[theme][0],
+            color2: gradientThemes[theme][1],
+          }}
+          style={{ flex: 1 }}
+        />
       </View>
       <KeyboardAvoidingView
         behavior="position"

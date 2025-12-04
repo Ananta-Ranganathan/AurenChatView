@@ -9,6 +9,7 @@
   NSLayoutConstraint *_leadingConstraint;
   NSLayoutConstraint *_trailingConstraint;
   NSInteger _animationGeneration;
+  CAGradientLayer *_gradientLayer;
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -21,7 +22,10 @@
     
     [self.contentView addSubview:_bubbleView];
     
-    // Container for the dots (makes centering easier)
+    _gradientLayer = [CAGradientLayer layer];
+    _gradientLayer.cornerRadius = 20.0;
+    [_bubbleView.layer insertSublayer:_gradientLayer atIndex:0];
+    
     _dotsContainer = [UIView new];
     _dotsContainer.translatesAutoresizingMaskIntoConstraints = NO;
     [_bubbleView addSubview:_dotsContainer];
@@ -80,6 +84,12 @@
   return self;
 }
 
+- (void)layoutSubviews
+{
+  [super layoutSubviews];
+  _gradientLayer.frame = _bubbleView.bounds;
+}
+
 - (UIView *)createDot
 {
   UIView *dot = [UIView new];
@@ -89,16 +99,21 @@
   return dot;
 }
 
-- (void)configureWithIsUser:(BOOL)isUser
+- (void)configureWithIsUser:(BOOL)isUser gradientStart:(UIColor *)gradientStart gradientEnd:(UIColor *)gradientEnd
 {
   if (isUser) {
     _leadingConstraint.active = NO;
     _trailingConstraint.active = YES;
-    _bubbleView.backgroundColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0];
+    _gradientLayer.hidden = YES;
+    self.bubbleView.backgroundColor = [UIColor colorWithRed:0.2 green:0.4 blue:1.0 alpha:1.0];
   } else {
     _trailingConstraint.active = NO;
     _leadingConstraint.active = YES;
-    _bubbleView.backgroundColor = [UIColor colorWithRed:0.2 green:0.4 blue:1.0 alpha:1.0];
+    _gradientLayer.hidden = NO;
+    _bubbleView.backgroundColor = [UIColor clearColor];
+    _gradientLayer.colors = @[(id)gradientStart.CGColor, (id)gradientEnd.CGColor];
+    _gradientLayer.startPoint = CGPointMake(0, 0);
+    _gradientLayer.endPoint = CGPointMake(1, 1);
   }
 }
 

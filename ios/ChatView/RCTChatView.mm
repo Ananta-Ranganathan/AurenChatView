@@ -26,8 +26,11 @@ using namespace facebook::react;
 @implementation RCTChatView {
   UICollectionView *_collectionView;
   std::vector<AurenChatViewMessagesStruct> _messages;
+  AurenChatViewThemeStruct _theme;
   CGFloat _keyboardBottomInset;
   std::unordered_set<std::string> _animatedMessageClientIDs;
+  UIColor *_botGradientStart;
+  UIColor *_botGradientEnd;
 }
 
 - (instancetype)init
@@ -88,6 +91,16 @@ using namespace facebook::react;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
+UIColor *colorFromHex(const std::string &hex) {
+    NSString *hexString = [NSString stringWithUTF8String:hex.c_str()];
+    unsigned int hexInt = 0;
+    [[NSScanner scannerWithString:[hexString substringFromIndex:1]] scanHexInt:&hexInt];
+    return [UIColor colorWithRed:((hexInt >> 16) & 0xFF) / 255.0
+                           green:((hexInt >> 8) & 0xFF) / 255.0
+                            blue:(hexInt & 0xFF) / 255.0
+                           alpha:1.0];
+}
+
 - (void)updateProps:(Props::Shared const &)props
            oldProps:(Props::Shared const &)oldProps
 {
@@ -98,7 +111,19 @@ using namespace facebook::react;
 
   const auto &newViewProps =
       *std::static_pointer_cast<AurenChatViewProps const>(props);
-
+  
+  _collectionView.backgroundColor = colorFromHex(newViewProps.theme.mode);
+  _botGradientStart = colorFromHex(newViewProps.theme.color1);
+  _botGradientEnd = colorFromHex(newViewProps.theme.color2);
+  NSLog(@"botgradientstart: %s", newViewProps.theme.color1.c_str());
+  NSLog(@"botgradientend: %s", newViewProps.theme.color2.c_str());
+  if (oldProps) {
+      const auto &oldViewProps = *std::static_pointer_cast<AurenChatViewProps const>(oldProps);
+      if (oldViewProps.theme.color1 != newViewProps.theme.color1 ||
+          oldViewProps.theme.color2 != newViewProps.theme.color2) {
+          [_collectionView reloadData];
+      }
+  }
   // Build new messages vector
   std::vector<AurenChatViewMessagesStruct> newMessages;
   newMessages.reserve(newViewProps.messages.size());
@@ -191,8 +216,6 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 }
 
-
-
 -(void)layoutSubviews
 {
   [super layoutSubviews];
@@ -220,7 +243,7 @@ using namespace facebook::react;
     RCTTypingIndicatorCell *cell =
         [collectionView dequeueReusableCellWithReuseIdentifier:@"RCTTypingIndicatorCell"
                                                   forIndexPath:indexPath];
-    [cell configureWithIsUser:msg.isUser];
+    [cell configureWithIsUser:msg.isUser gradientStart:_botGradientStart gradientEnd:_botGradientEnd];
     [cell startAnimating];
     return cell;
   }
@@ -236,7 +259,7 @@ using namespace facebook::react;
   }
 
   NSString *text = [NSString stringWithUTF8String:msg.text.c_str()];
-  [cell configureWithText:text isUser:msg.isUser sameAsPrevious:sameAsPrevious readByCharacterAt:msg.readByCharacterAt];
+  [cell configureWithText:text isUser:msg.isUser sameAsPrevious:sameAsPrevious readByCharacterAt:msg.readByCharacterAt      gradientStart:_botGradientStart gradientEnd:_botGradientEnd];
 
   return cell;
 }

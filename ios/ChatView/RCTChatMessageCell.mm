@@ -71,6 +71,10 @@
         [[UIContextMenuInteraction alloc] initWithDelegate:self];
     [_bubbleView addInteraction:interaction];
     
+    self.gradientLayer = [CAGradientLayer layer];
+    self.gradientLayer.cornerRadius = 20.0;
+    [_bubbleView.layer insertSublayer:self.gradientLayer atIndex:0];
+    
     _readReceiptImageView = [UIImageView new];
     _readReceiptImageView.translatesAutoresizingMaskIntoConstraints = NO;
     _readReceiptImageView.tintColor = [[UIColor whiteColor] colorWithAlphaComponent:0.7];
@@ -103,9 +107,11 @@
 
   self.label.preferredMaxLayoutWidth =
       maxBubbleWidth - 2 * labelPaddingHorizontal;
+  
+  self.gradientLayer.frame = _bubbleView.bounds;
 }
 
-- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt
+- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor *)gradientStart gradientEnd:(UIColor *)gradientEnd
 {
   self.label.text = text;
   self.label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
@@ -113,11 +119,21 @@
   if (isUser) {
     self.leadingConstraint.active = NO;
     self.trailingConstraint.active = YES;
-    self.bubbleView.backgroundColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // Green for user
+    self.gradientLayer.hidden = YES;
+    self.bubbleView.backgroundColor = [UIColor colorWithRed:0.2 green:0.4 blue:1.0 alpha:1.0];
   } else {
     self.leadingConstraint.active = YES;
     self.trailingConstraint.active = NO;
-    self.bubbleView.backgroundColor = [UIColor colorWithRed:0.2 green:0.4 blue:1.0 alpha:1.0]; // Blue for assistant
+    self.gradientLayer.hidden = NO;
+    self.bubbleView.backgroundColor = [UIColor clearColor];
+    NSLog(@"gradientStart: %@, gradientEnd: %@", gradientStart, gradientEnd);
+    NSLog(@"bubbleView.bounds: %@", NSStringFromCGRect(_bubbleView.bounds));
+    self.gradientLayer.colors = @[
+        (id)gradientStart.CGColor,
+        (id)gradientEnd.CGColor,
+    ];
+    self.gradientLayer.startPoint = CGPointMake(0, 0);
+    self.gradientLayer.endPoint = CGPointMake(1, 1);
   }
   if (isUser) {
     self.readReceiptImageView.hidden = NO;
@@ -129,6 +145,8 @@
   self.labelTrailingConstraint.constant = isUser ? -24.0 : -16.0;
   self.topConstraint.constant = sameAsPrevious ? 2.0 : 12.0;
 
+  [self layoutIfNeeded];
+  self.gradientLayer.frame = _bubbleView.bounds;
 }
 
 - (UIContextMenuConfiguration *)contextMenuInteraction:(UIContextMenuInteraction *)interaction
