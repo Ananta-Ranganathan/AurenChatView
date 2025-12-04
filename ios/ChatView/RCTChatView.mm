@@ -146,7 +146,7 @@ using namespace facebook::react;
       // New message
       [toInsert addObject:[NSIndexPath indexPathForItem:i inSection:0]];
     } else {
-      // Existing message - check if text changed
+      // Existing message - check if text changed (will have to check read receipts or reactions and stuff soon)
       NSInteger oldIndex = it->second;
       if (_messages[oldIndex].text != newMessages[i].text ||
           _messages[oldIndex].isTypingIndicator != newMessages[i].isTypingIndicator) {
@@ -156,7 +156,9 @@ using namespace facebook::react;
   }
 
   if (toDelete.count > 0 || toInsert.count > 0 || toReload.count > 0) {
+    NSLog(@"before performBatchUpdates");
     [_collectionView performBatchUpdates:^{
+      NSLog(@"inside batch update block");
       self->_messages = std::move(newMessages);
       
       if (toDelete.count > 0) {
@@ -169,18 +171,22 @@ using namespace facebook::react;
         [self->_collectionView reloadItemsAtIndexPaths:toReload];
       }
     } completion:^(BOOL finished) {
-      if (wasAtBottom && self->_messages.size() > 0) {
-          CGFloat newContentHeight = self->_collectionView.contentSize.height;
-          CGFloat newVisibleHeight = self->_collectionView.bounds.size.height;
-          
-          // Only scroll if content is taller than visible area
-          if (newContentHeight > newVisibleHeight) {
-              UIEdgeInsets newInsets = self->_collectionView.contentInset;
-              CGFloat newBottomOffset = newContentHeight + newInsets.bottom - newVisibleHeight;
-              [self->_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
-          }
-      }
+      NSLog(@"completion block fired");
+
     }];
+    NSLog(@"after performBatchUpdates");
+    if (wasAtBottom && self->_messages.size() > 0) {
+        CGFloat newContentHeight = self->_collectionView.contentSize.height;
+        CGFloat newVisibleHeight = self->_collectionView.bounds.size.height;
+        
+        // Only scroll if content is taller than visible area
+        if (newContentHeight > newVisibleHeight) {
+          NSLog(@"scrolling because newcontent height %f is higher than new visible height %f", newContentHeight, newVisibleHeight);
+            UIEdgeInsets newInsets = self->_collectionView.contentInset;
+            CGFloat newBottomOffset = newContentHeight + newInsets.bottom - newVisibleHeight;
+            [self->_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
+        }
+    }
   } else {
     _messages = std::move(newMessages);
   }
@@ -356,27 +362,27 @@ using namespace facebook::react;
        willDisplayCell:(UICollectionViewCell *)cell
     forItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    // Only animate newly inserted cells, not cells appearing from scrolling
-    // You might want to track which indices were just inserted
-    
+  NSLog(@"willDisplayCell fired for index %ld", (long)indexPath.item);
+
     cell.alpha = 0;
-    cell.transform = CGAffineTransformMakeTranslation(20, 0);
-    
+    CGAffineTransform t = CGAffineTransformMakeScale(0.5, 0.5);
+    AurenChatViewMessagesStruct message = _messages[indexPath.item];
+  if (message.isUser) {
+    cell.transform = CGAffineTransformConcat(t, CGAffineTransformMakeTranslation(-20, 0));
+  } else {
+    cell.transform = CGAffineTransformConcat(t, CGAffineTransformMakeTranslation(20, 0));
+  }
   dispatch_async(dispatch_get_main_queue(), ^{
-      [UIView animateWithDuration:0.75
-                            delay:0
-                          options:UIViewAnimationOptionCurveEaseOut
-                       animations:^{
-          cell.transform = CGAffineTransformIdentity;
-      } completion:nil];
-    NSLog(@"alpha before animation: %f", cell.alpha);
     cell.alpha = 0;
-      [UIView animateWithDuration:0.75
+      [UIView animateWithDuration:0.25
                             delay:0
                           options:UIViewAnimationOptionCurveEaseOut
                        animations:^{
           cell.alpha = 1;
-      } completion:nil];
+        cell.transform = CGAffineTransformIdentity;
+      } completion:^(BOOL finished) {
+        NSLog(@"cell animation finished for index %ld", (long)indexPath.item);
+    }];
   });
 }
 
