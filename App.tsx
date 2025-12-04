@@ -33,8 +33,8 @@ function App() {
 
 function AppContent() {
   const initialMessages: Message[] = [
-    { uuid: '1', isUser: false, text: 'hi there' },
-    { uuid: '2', isUser: true, text: 'hi back' },
+    { uuid: '1', isUser: false, text: 'hi there\n' },
+    { uuid: '2', isUser: true, text: 'hi back\n' },
     {
       uuid: '3',
       isUser: false,

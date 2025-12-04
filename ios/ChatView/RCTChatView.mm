@@ -152,7 +152,6 @@ using namespace facebook::react;
         [toReload addObject:[NSIndexPath indexPathForItem:i inSection:0]];
       } else if (_messages[oldIndex].readByCharacterAt != newMessages[i].readByCharacterAt) {
         [toReconfigure addObject:[NSIndexPath indexPathForItem:i inSection:0]];
-        NSLog(@"will reconfigure %s", newMessages[i].uuid.c_str());
       }
     }
   }
@@ -174,12 +173,12 @@ using namespace facebook::react;
           [self->_collectionView reconfigureItemsAtIndexPaths:toReconfigure];
       }
     } completion:nil];
-    if (wasAtBottom && self->_messages.size() > 0) {
+    if (wasAtBottom && _messages.size() > 0) {
         CGFloat newContentHeight = self->_collectionView.contentSize.height;
         CGFloat newVisibleHeight = self->_collectionView.bounds.size.height;
         
-        // Only scroll if content is taller than visible area
-        if (newContentHeight > newVisibleHeight) {
+        // Only scroll if content is close to being taller than visible area
+        if (newContentHeight > newVisibleHeight - 100) {
             UIEdgeInsets newInsets = self->_collectionView.contentInset;
             CGFloat newBottomOffset = newContentHeight + newInsets.bottom - newVisibleHeight;
             [self->_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
@@ -372,7 +371,6 @@ using namespace facebook::react;
        willDisplayCell:(UICollectionViewCell *)cell
     forItemAtIndexPath:(NSIndexPath *)indexPath
 {
-  NSLog(@"willDisplayCell fired for index %ld", (long)indexPath.item);
   AurenChatViewMessagesStruct message = _messages[indexPath.item];
   if (_animatedMessageClientIDs.find(message.uuid) != _animatedMessageClientIDs.end()) {
     cell.alpha = 1;
@@ -398,9 +396,7 @@ using namespace facebook::react;
                       animations:^{
                         cell.alpha = 1;
                         cell.transform = CGAffineTransformIdentity;
-                      } completion:^(BOOL finished) {
-                        NSLog(@"cell animation finished for index %ld", (long)indexPath.item);
-    }];
+                      } completion:nil];
   });
 }
 

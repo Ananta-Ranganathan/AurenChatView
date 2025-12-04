@@ -107,7 +107,6 @@
 
 - (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt
 {
-  NSLog(@"configuring with params %@, %f ", text, readByCharacterAt);
   self.label.text = text;
   self.label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
   
