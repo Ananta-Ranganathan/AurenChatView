@@ -53,24 +53,36 @@
     const CGFloat labelPaddingVertical = 10.0;
     const CGFloat labelPaddingHorizontal = 16.0;
 
+    
+    _topConstraint = [_bubbleView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:bubbleVertical];
     _leadingConstraint = [_bubbleView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:bubbleHorizontal];
     _trailingConstraint = [_bubbleView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-bubbleHorizontal];
 
     [NSLayoutConstraint activateConstraints:@[
-      [_bubbleView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:bubbleVertical],
+      _topConstraint,
       [_bubbleView.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-bubbleVertical],
       [_label.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor constant:labelPaddingVertical],
       [_label.bottomAnchor constraintEqualToAnchor:_bubbleView.bottomAnchor constant:-labelPaddingVertical],
       [_label.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor constant:labelPaddingHorizontal],
-      [_label.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor constant:-labelPaddingHorizontal],
     ]];
+    _labelTrailingConstraint = [_label.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor constant:-labelPaddingHorizontal];
+    _labelTrailingConstraint.active = YES;
     UIContextMenuInteraction *interaction =
         [[UIContextMenuInteraction alloc] initWithDelegate:self];
     [_bubbleView addInteraction:interaction];
     
-    self.alpha = 0;
-    self.transform = CGAffineTransformMakeTranslation(20, 0);
-    
+    _readReceiptImageView = [UIImageView new];
+    _readReceiptImageView.translatesAutoresizingMaskIntoConstraints = NO;
+    _readReceiptImageView.tintColor = [[UIColor whiteColor] colorWithAlphaComponent:0.7];
+    _readReceiptImageView.contentMode = UIViewContentModeScaleAspectFit;
+    [_bubbleView addSubview:_readReceiptImageView];
+
+    [NSLayoutConstraint activateConstraints:@[
+      [_readReceiptImageView.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor constant:-8.0],
+      [_readReceiptImageView.bottomAnchor constraintEqualToAnchor:_bubbleView.bottomAnchor constant:-6.0],
+      [_readReceiptImageView.widthAnchor constraintEqualToConstant:14.0],
+      [_readReceiptImageView.heightAnchor constraintEqualToConstant:14.0],
+    ]];
   }
   return self;
 }
@@ -93,7 +105,7 @@
       maxBubbleWidth - 2 * labelPaddingHorizontal;
 }
 
-- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser
+- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt
 {
   self.label.text = text;
   self.label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
@@ -107,6 +119,16 @@
     self.trailingConstraint.active = NO;
     self.bubbleView.backgroundColor = [UIColor colorWithRed:0.2 green:0.4 blue:1.0 alpha:1.0]; // Blue for assistant
   }
+  if (isUser) {
+    self.readReceiptImageView.hidden = NO;
+    NSString *imageName = (readByCharacterAt != 0.0) ? @"checkmark.circle.fill" : @"checkmark.circle";
+    self.readReceiptImageView.image = [UIImage systemImageNamed:imageName];
+  } else {
+    self.readReceiptImageView.hidden = YES;
+  }
+  self.labelTrailingConstraint.constant = isUser ? -24.0 : -16.0;
+  self.topConstraint.constant = sameAsPrevious ? 2.0 : 12.0;
+
 }
 
 - (UIContextMenuConfiguration *)contextMenuInteraction:(UIContextMenuInteraction *)interaction

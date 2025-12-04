@@ -20,8 +20,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, strong) NSLayoutConstraint *leadingConstraint;
 @property(nonatomic, strong) NSLayoutConstraint *trailingConstraint;
 @property(nonatomic, strong) NSLayoutConstraint *maxWidthConstraint;
+@property (nonatomic, strong) NSLayoutConstraint *topConstraint;
+@property (nonatomic, strong) UIImageView *readReceiptImageView;
+@property (nonatomic, strong) NSLayoutConstraint *labelTrailingConstraint;
 
-- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser;
+- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt;;
 
 @end
 

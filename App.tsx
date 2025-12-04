@@ -66,6 +66,12 @@ function AppContent() {
     setMessages([...messages, typingIndicator]);
     setTimeout(() => {
       setMessages([...currentMessages, pendingMsg]);
+      setTimeout(() => {
+        setMessages([
+          ...currentMessages,
+          { ...pendingMsg, readByCharacterAt: 1.0 },
+        ]);
+      }, 200);
     }, 1000);
   };
 

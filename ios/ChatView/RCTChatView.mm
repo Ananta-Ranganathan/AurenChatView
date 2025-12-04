@@ -27,6 +27,7 @@ using namespace facebook::react;
   UICollectionView *_collectionView;
   std::vector<AurenChatViewMessagesStruct> _messages;
   CGFloat _keyboardBottomInset;
+  std::unordered_set<std::string> _animatedMessageClientIDs;
 }
 
 - (instancetype)init
@@ -36,7 +37,7 @@ using namespace facebook::react;
 
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     layout.scrollDirection = UICollectionViewScrollDirectionVertical;
-    layout.minimumLineSpacing = 8.0;
+    layout.minimumLineSpacing = 0.0;
     layout.sectionInset = UIEdgeInsetsZero;
     layout.estimatedItemSize = UICollectionViewFlowLayoutAutomaticSize;
     layout.itemSize = UICollectionViewFlowLayoutAutomaticSize;
@@ -149,7 +150,8 @@ using namespace facebook::react;
       // Existing message - check if text changed (will have to check read receipts or reactions and stuff soon)
       NSInteger oldIndex = it->second;
       if (_messages[oldIndex].text != newMessages[i].text ||
-          _messages[oldIndex].isTypingIndicator != newMessages[i].isTypingIndicator) {
+          _messages[oldIndex].isTypingIndicator != newMessages[i].isTypingIndicator ||
+          _messages[oldIndex].readByCharacterAt != newMessages[i].readByCharacterAt) {
         [toReload addObject:[NSIndexPath indexPathForItem:i inSection:0]];
       }
     }
@@ -231,9 +233,15 @@ using namespace facebook::react;
   RCTChatMessageCell *cell =
       [collectionView dequeueReusableCellWithReuseIdentifier:@"RCTChatMessageCell"
                                                 forIndexPath:indexPath];
+  
+  BOOL sameAsPrevious = NO;
+  if (indexPath.item > 0) {
+    const auto &prevMsg = _messages[(size_t)(indexPath.item - 1)];
+    sameAsPrevious = (prevMsg.isUser == msg.isUser) && !prevMsg.isTypingIndicator;
+  }
 
   NSString *text = [NSString stringWithUTF8String:msg.text.c_str()];
-  [cell configureWithText:text isUser:msg.isUser];
+  [cell configureWithText:text isUser:msg.isUser sameAsPrevious:sameAsPrevious readByCharacterAt:msg.readByCharacterAt];
 
   return cell;
 }
@@ -314,10 +322,16 @@ using namespace facebook::react;
 {
   const auto &msg = _messages[(size_t)indexPath.item];
     CGFloat contentWidth = collectionView.bounds.size.width;
+  BOOL sameAsPrevious = NO;
+  if (indexPath.item > 0) {
+    const auto &prevMsg = _messages[(size_t)(indexPath.item - 1)];
+    sameAsPrevious = (prevMsg.isUser == msg.isUser) && !prevMsg.isTypingIndicator;
+  }
+  CGFloat verticalSpacing = sameAsPrevious ? 2.0 : 8.0;
     
   if (msg.isTypingIndicator) {
     CGFloat textHeight = [UIFont preferredFontForTextStyle:UIFontTextStyleBody].lineHeight;
-    CGFloat cellHeight = ceil(textHeight) + 2 * 10.0 + 8.0;
+    CGFloat cellHeight = ceil(textHeight) + 2 * 10.0 + 8.0 + verticalSpacing;
     return CGSizeMake(contentWidth, cellHeight);
   }
     
@@ -333,7 +347,7 @@ using namespace facebook::react;
                                       attributes:@{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody]}
                                          context:nil];
     
-    CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8;
+    CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8.0 + verticalSpacing;
     
     return CGSizeMake(contentWidth, cellHeight);
   }
@@ -363,10 +377,14 @@ using namespace facebook::react;
     forItemAtIndexPath:(NSIndexPath *)indexPath
 {
   NSLog(@"willDisplayCell fired for index %ld", (long)indexPath.item);
-
+  AurenChatViewMessagesStruct message = _messages[indexPath.item];
+  if (_animatedMessageClientIDs.find(message.uuid) != _animatedMessageClientIDs.end()) {
+    return;
+  }
+  _animatedMessageClientIDs.insert(message.uuid);
     cell.alpha = 0;
     CGAffineTransform t = CGAffineTransformMakeScale(0.5, 0.5);
-    AurenChatViewMessagesStruct message = _messages[indexPath.item];
+
   if (message.isUser) {
     cell.transform = CGAffineTransformConcat(t, CGAffineTransformMakeTranslation(-20, 0));
   } else {
