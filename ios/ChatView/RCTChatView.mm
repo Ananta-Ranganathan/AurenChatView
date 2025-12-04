@@ -148,10 +148,6 @@ using namespace facebook::react;
     } else {
       // Reload for typing indicators
       NSInteger oldIndex = it->second;
-      NSLog(@"Comparing uuid %s: old readByCharacterAt=%f, new readByCharacterAt=%f",
-            newMessages[i].uuid.c_str(),
-            _messages[oldIndex].readByCharacterAt,
-            newMessages[i].readByCharacterAt);
       if (_messages[oldIndex].isTypingIndicator != newMessages[i].isTypingIndicator) {
         [toReload addObject:[NSIndexPath indexPathForItem:i inSection:0]];
       } else if (_messages[oldIndex].readByCharacterAt != newMessages[i].readByCharacterAt) {
@@ -387,24 +383,23 @@ using namespace facebook::react;
   if (!message.isTypingIndicator) {
     _animatedMessageClientIDs.insert(message.uuid);
   }
+  dispatch_async(dispatch_get_main_queue(), ^{
     cell.alpha = 0;
     CGAffineTransform t = CGAffineTransformMakeScale(0.5, 0.5);
 
-  if (message.isUser) {
-    cell.transform = CGAffineTransformConcat(t, CGAffineTransformMakeTranslation(-20, 0));
-  } else {
-    cell.transform = CGAffineTransformConcat(t, CGAffineTransformMakeTranslation(20, 0));
-  }
-  dispatch_async(dispatch_get_main_queue(), ^{
-    cell.alpha = 0;
-      [UIView animateWithDuration:0.25
-                            delay:0
-                          options:UIViewAnimationOptionCurveEaseOut
-                       animations:^{
-          cell.alpha = 1;
-        cell.transform = CGAffineTransformIdentity;
-      } completion:^(BOOL finished) {
-        NSLog(@"cell animation finished for index %ld", (long)indexPath.item);
+    if (message.isUser) {
+      cell.transform = CGAffineTransformConcat(t, CGAffineTransformMakeTranslation(-20, 0));
+    } else {
+      cell.transform = CGAffineTransformConcat(t, CGAffineTransformMakeTranslation(20, 0));
+    }
+    [UIView animateWithDuration:0.25
+                      delay:0
+                      options:UIViewAnimationOptionCurveEaseOut
+                      animations:^{
+                        cell.alpha = 1;
+                        cell.transform = CGAffineTransformIdentity;
+                      } completion:^(BOOL finished) {
+                        NSLog(@"cell animation finished for index %ld", (long)indexPath.item);
     }];
   });
 }
