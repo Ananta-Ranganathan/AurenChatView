@@ -33,8 +33,6 @@ using namespace facebook::react;
 - (instancetype)init
 {
   if (self = [super init]) {
-    NSLog(@"super init succeeded");
-
     UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
     layout.scrollDirection = UICollectionViewScrollDirectionVertical;
     layout.minimumLineSpacing = 0.0;
@@ -132,6 +130,7 @@ using namespace facebook::react;
   NSMutableArray<NSIndexPath *> *toDelete = [NSMutableArray new];
   NSMutableArray<NSIndexPath *> *toInsert = [NSMutableArray new];
   NSMutableArray<NSIndexPath *> *toReload = [NSMutableArray new];
+  NSMutableArray<NSIndexPath *> *toReconfigure = [NSMutableArray new];
 
   // Check for deletions (in old but not in new)
   for (NSInteger i = 0; i < (NSInteger)_messages.size(); i++) {
@@ -147,20 +146,23 @@ using namespace facebook::react;
       // New message
       [toInsert addObject:[NSIndexPath indexPathForItem:i inSection:0]];
     } else {
-      // Existing message - check if text changed (will have to check read receipts or reactions and stuff soon)
+      // Reload for typing indicators
       NSInteger oldIndex = it->second;
-      if (_messages[oldIndex].text != newMessages[i].text ||
-          _messages[oldIndex].isTypingIndicator != newMessages[i].isTypingIndicator ||
-          _messages[oldIndex].readByCharacterAt != newMessages[i].readByCharacterAt) {
+      NSLog(@"Comparing uuid %s: old readByCharacterAt=%f, new readByCharacterAt=%f",
+            newMessages[i].uuid.c_str(),
+            _messages[oldIndex].readByCharacterAt,
+            newMessages[i].readByCharacterAt);
+      if (_messages[oldIndex].isTypingIndicator != newMessages[i].isTypingIndicator) {
         [toReload addObject:[NSIndexPath indexPathForItem:i inSection:0]];
+      } else if (_messages[oldIndex].readByCharacterAt != newMessages[i].readByCharacterAt) {
+        [toReconfigure addObject:[NSIndexPath indexPathForItem:i inSection:0]];
+        NSLog(@"will reconfigure %s", newMessages[i].uuid.c_str());
       }
     }
   }
 
-  if (toDelete.count > 0 || toInsert.count > 0 || toReload.count > 0) {
-    NSLog(@"before performBatchUpdates");
+  if (toDelete.count > 0 || toInsert.count > 0 || toReload.count > 0 || toReconfigure.count > 0) {
     [_collectionView performBatchUpdates:^{
-      NSLog(@"inside batch update block");
       self->_messages = std::move(newMessages);
       
       if (toDelete.count > 0) {
@@ -170,20 +172,18 @@ using namespace facebook::react;
         [self->_collectionView insertItemsAtIndexPaths:toInsert];
       }
       if (toReload.count > 0) {
-        [self->_collectionView reloadItemsAtIndexPaths:toReload];
+          [self->_collectionView reloadItemsAtIndexPaths:toReload];
       }
-    } completion:^(BOOL finished) {
-      NSLog(@"completion block fired");
-
-    }];
-    NSLog(@"after performBatchUpdates");
+      if (toReconfigure.count > 0) {
+          [self->_collectionView reconfigureItemsAtIndexPaths:toReconfigure];
+      }
+    } completion:nil];
     if (wasAtBottom && self->_messages.size() > 0) {
         CGFloat newContentHeight = self->_collectionView.contentSize.height;
         CGFloat newVisibleHeight = self->_collectionView.bounds.size.height;
         
         // Only scroll if content is taller than visible area
         if (newContentHeight > newVisibleHeight) {
-          NSLog(@"scrolling because newcontent height %f is higher than new visible height %f", newContentHeight, newVisibleHeight);
             UIEdgeInsets newInsets = self->_collectionView.contentInset;
             CGFloat newBottomOffset = newContentHeight + newInsets.bottom - newVisibleHeight;
             [self->_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
@@ -379,9 +379,14 @@ using namespace facebook::react;
   NSLog(@"willDisplayCell fired for index %ld", (long)indexPath.item);
   AurenChatViewMessagesStruct message = _messages[indexPath.item];
   if (_animatedMessageClientIDs.find(message.uuid) != _animatedMessageClientIDs.end()) {
+    cell.alpha = 1;
+    cell.transform = CGAffineTransformIdentity;
+    NSLog(@"skipping anim for index%ld", (long)indexPath.item);
     return;
   }
-  _animatedMessageClientIDs.insert(message.uuid);
+  if (!message.isTypingIndicator) {
+    _animatedMessageClientIDs.insert(message.uuid);
+  }
     cell.alpha = 0;
     CGAffineTransform t = CGAffineTransformMakeScale(0.5, 0.5);
 

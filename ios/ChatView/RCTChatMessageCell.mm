@@ -79,7 +79,7 @@
 
     [NSLayoutConstraint activateConstraints:@[
       [_readReceiptImageView.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor constant:-8.0],
-      [_readReceiptImageView.bottomAnchor constraintEqualToAnchor:_bubbleView.bottomAnchor constant:-6.0],
+      [_readReceiptImageView.centerYAnchor constraintEqualToAnchor:_label.lastBaselineAnchor constant:-5.0],
       [_readReceiptImageView.widthAnchor constraintEqualToConstant:14.0],
       [_readReceiptImageView.heightAnchor constraintEqualToConstant:14.0],
     ]];
@@ -107,6 +107,7 @@
 
 - (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt
 {
+  NSLog(@"configuring with params %@, %f ", text, readByCharacterAt);
   self.label.text = text;
   self.label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
   
@@ -146,13 +147,6 @@
         }];
         return [UIMenu menuWithTitle:@"" children:@[copy]];
     }];
-}
-
-- (void)prepareForReuse
-{
-    [super prepareForReuse];
-    self.alpha = 0;
-    self.transform = CGAffineTransformMakeTranslation(20, 0);
 }
 
 @end
