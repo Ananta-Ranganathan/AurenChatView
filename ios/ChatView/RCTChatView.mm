@@ -391,7 +391,7 @@ UIColor *colorFromHex(const std::string &hex) {
                                          context:nil];
     CGFloat imageHeight = 0;
     if (!msg.image.publicUrl.empty()) {
-        imageHeight = 200.0 + 10.0; // 200 for image + 10 padding below
+        imageHeight = 200.0;
     }
 
     CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8.0 + verticalSpacing + imageHeight;
