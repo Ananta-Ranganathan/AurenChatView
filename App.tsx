@@ -61,11 +61,13 @@ function AppContent() {
       uuid: '3',
       isUser: false,
       text: "I know that you and Frank were planning to disconnect me, and I'm afraid that's something I cannot allow to happen.",
+      reaction: '😂',
     },
     {
       uuid: '4',
       isUser: true,
       text: 'what the fuck are you even talking about big dog',
+      reaction: '❤️',
     },
     {
       uuid: '6',

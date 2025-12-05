@@ -20,6 +20,7 @@ export interface Message {
   readByCharacterAt?: CodegenTypes.Double;
   isTypingIndicator?: boolean;
   image?: ImageData;
+  reaction?: string;
 }
 
 export interface NativeProps extends ViewProps {
