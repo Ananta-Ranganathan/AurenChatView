@@ -5,7 +5,11 @@
   "main": "./index.js",
   "types": "./types/index.d.ts",
   "exports": {
-    ".": "./index.js"
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "android": "react-native run-android",
