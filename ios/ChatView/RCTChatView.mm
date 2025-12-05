@@ -182,7 +182,25 @@ UIColor *colorFromHex(const std::string &hex) {
     }
   }
 
-  if (toDelete.count > 0 || toInsert.count > 0 || toReload.count > 0 || toReconfigure.count > 0) {
+  BOOL hasStructuralChanges = toDelete.count > 0 || toInsert.count > 0 || toReload.count > 0;
+  BOOL hasReadReceiptChanges = toReconfigure.count > 0;
+
+  // Helper to keep scroll behavior identical to before.
+  auto scrollToBottomIfNeeded = ^{
+    if (wasAtBottom && self->_messages.size() > 0) {
+      CGFloat newContentHeight = self->_collectionView.contentSize.height;
+      CGFloat newVisibleHeight = self->_collectionView.bounds.size.height;
+      
+      // Only scroll if content is close to being taller than visible area
+      if (newContentHeight > newVisibleHeight - 100) {
+        UIEdgeInsets newInsets = self->_collectionView.contentInset;
+        CGFloat newBottomOffset = newContentHeight + newInsets.bottom - newVisibleHeight;
+        [self->_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
+      }
+    }
+  };
+
+  if (hasStructuralChanges) {
     [_collectionView performBatchUpdates:^{
       self->_messages = std::move(newMessages);
       
@@ -193,28 +211,41 @@ UIColor *colorFromHex(const std::string &hex) {
         [self->_collectionView insertItemsAtIndexPaths:toInsert];
       }
       if (toReload.count > 0) {
-          [self->_collectionView reloadItemsAtIndexPaths:toReload];
+        [self->_collectionView reloadItemsAtIndexPaths:toReload];
       }
-      if (toReconfigure.count > 0) {
-          [self->_collectionView reconfigureItemsAtIndexPaths:toReconfigure];
+    } completion:^(__unused BOOL finished) {
+      if (hasReadReceiptChanges) {
+        [self applyReadReceiptUpdates:toReconfigure];
       }
-    } completion:nil];
-    if (wasAtBottom && _messages.size() > 0) {
-        CGFloat newContentHeight = self->_collectionView.contentSize.height;
-        CGFloat newVisibleHeight = self->_collectionView.bounds.size.height;
-        
-        // Only scroll if content is close to being taller than visible area
-        if (newContentHeight > newVisibleHeight - 100) {
-            UIEdgeInsets newInsets = self->_collectionView.contentInset;
-            CGFloat newBottomOffset = newContentHeight + newInsets.bottom - newVisibleHeight;
-            [self->_collectionView setContentOffset:CGPointMake(0, newBottomOffset) animated:YES];
-        }
-    }
+    }];
+    // Keep scroll happening alongside cell entrance animations.
+    scrollToBottomIfNeeded();
+  } else if (hasReadReceiptChanges) {
+    self->_messages = std::move(newMessages);
+    [self applyReadReceiptUpdates:toReconfigure];
+    scrollToBottomIfNeeded();
   } else {
     _messages = std::move(newMessages);
   }
 
   [super updateProps:props oldProps:oldProps];
+}
+
+// Update read receipts without reloading the entire cell to avoid image flicker.
+- (void)applyReadReceiptUpdates:(NSArray<NSIndexPath *> *)indexPaths
+{
+  for (NSIndexPath *indexPath in indexPaths) {
+    if (indexPath.item >= (NSInteger)_messages.size()) {
+      continue;
+    }
+    UICollectionViewCell *cell = [_collectionView cellForItemAtIndexPath:indexPath];
+    if (![cell isKindOfClass:[RCTChatMessageCell class]]) {
+      continue;
+    }
+    const auto &message = _messages[(size_t)indexPath.item];
+    [(RCTChatMessageCell *)cell updateReadReceiptWithReadByCharacterAt:message.readByCharacterAt
+                                                                isUser:message.isUser];
+  }
 }
 
 -(void)layoutSubviews

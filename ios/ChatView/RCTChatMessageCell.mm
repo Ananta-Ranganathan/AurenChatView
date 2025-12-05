@@ -197,9 +197,7 @@
     self.gradientLayer.endPoint = CGPointMake(1, 1);
   }
   if (isUser) {
-    self.readReceiptImageView.hidden = NO;
-    NSString *imageName = (readByCharacterAt != 0.0) ? @"checkmark.circle.fill" : @"checkmark.circle";
-    self.readReceiptImageView.image = [UIImage systemImageNamed:imageName];
+    [self updateReadReceiptWithReadByCharacterAt:readByCharacterAt isUser:isUser];
   } else {
     self.readReceiptImageView.hidden = YES;
   }
@@ -226,6 +224,19 @@
   [self layoutIfNeeded];
   self.gradientLayer.frame = _bubbleView.bounds;
   NSLog(@"configure bubbleView.bounds: %@", NSStringFromCGRect(_bubbleView.bounds));
+}
+
+- (void)updateReadReceiptWithReadByCharacterAt:(double)readByCharacterAt
+                                        isUser:(BOOL)isUser
+{
+  if (!isUser) {
+    self.readReceiptImageView.hidden = YES;
+    return;
+  }
+
+  self.readReceiptImageView.hidden = NO;
+  NSString *imageName = (readByCharacterAt != 0.0) ? @"checkmark.circle.fill" : @"checkmark.circle";
+  self.readReceiptImageView.image = [UIImage systemImageNamed:imageName];
 }
 
 

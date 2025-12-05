@@ -114,7 +114,7 @@ function AppContent() {
           ...currentMessages,
           { ...pendingMsg, readByCharacterAt: 1.0 },
         ]);
-      }, 200);
+      }, 500);
     }, 1000);
   };
 

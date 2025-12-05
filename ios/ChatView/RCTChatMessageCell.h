@@ -36,6 +36,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor*)gradientStart gradientEnd:(UIColor*)gradientEnd reaction:(NSString *)reaction themeColor:(UIColor *)themeColor;
 - (void)configureWithImage:(NSDictionary * _Nullable)image;
+- (void)updateReadReceiptWithReadByCharacterAt:(double)readByCharacterAt
+                                        isUser:(BOOL)isUser;
 
 @end
 
