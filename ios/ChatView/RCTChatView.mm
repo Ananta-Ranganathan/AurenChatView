@@ -381,7 +381,7 @@ UIColor *colorFromHex(const std::string &hex) {
     const auto &prevMsg = _messages[(size_t)(indexPath.item - 1)];
     sameAsPrevious = (prevMsg.isUser == msg.isUser) && !prevMsg.isTypingIndicator;
   }
-  CGFloat verticalSpacing = sameAsPrevious ? 2.0 : 8.0;
+  CGFloat verticalSpacing = sameAsPrevious ? 0.0 : 8.0;
     
   if (msg.isTypingIndicator) {
     CGFloat textHeight = [UIFont preferredFontForTextStyle:UIFontTextStyleBody].lineHeight;
