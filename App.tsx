@@ -52,10 +52,9 @@ function AppContent() {
     {
       uuid: '2',
       isUser: true,
-      text: 'dont you think glasses are great this photo doesnt have glasses',
+      text: 'dont you think glasses are great',
       image: {
-        publicUrl:
-          'https://www.nme.com/wp-content/uploads/2024/01/le-sserafim-huh-yun-jin-solo-single-past-versions.jpg',
+        publicUrl: 'https://pbs.twimg.com/media/F2IQC7cW8AEQTbh.jpg',
       },
     },
     {

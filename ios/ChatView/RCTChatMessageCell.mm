@@ -14,6 +14,11 @@
 #import <react/renderer/components/AppSpec/Props.h>
 #import <react/renderer/components/AppSpec/RCTComponentViewHelpers.h>
 
+@interface RCTChatMessageCell ()
+@property (nonatomic, strong) NSLayoutConstraint *labelTopToBubbleConstraint;
+@property (nonatomic, strong) NSLayoutConstraint *labelTopToImageConstraint;
+@end
+
 @implementation RCTChatMessageCell
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -50,10 +55,10 @@
     _imageStackView.translatesAutoresizingMaskIntoConstraints = NO;
     _imageStackView.axis = UILayoutConstraintAxisVertical;
     _imageStackView.spacing = 4.0;
-    _imageStackView.alignment = UIStackViewAlignmentTrailing;
-    [self.contentView addSubview:_imageStackView];
+    _imageStackView.alignment = UIStackViewAlignmentFill;
 
     [_bubbleView addSubview:_label];
+    [_bubbleView addSubview:_imageStackView];
     [self.contentView addSubview:_bubbleView];
 
     const CGFloat bubbleVertical = 4.0;
@@ -63,19 +68,20 @@
 
     _leadingConstraint = [_bubbleView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:bubbleHorizontal];
     _trailingConstraint = [_bubbleView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-bubbleHorizontal];
+    _topConstraint = [_bubbleView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:12.0];
 
     [NSLayoutConstraint activateConstraints:@[
+      _topConstraint,
       [_bubbleView.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-bubbleVertical],
-      [_imageStackView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:bubbleVertical],
+      [_imageStackView.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor],
       [_imageStackView.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor],
       [_imageStackView.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor],
-      // Bubble sits below images
-      [_bubbleView.topAnchor constraintEqualToAnchor:_imageStackView.bottomAnchor constant:0],
-      // Label at top of bubble (no longer relative to imageStack)
-      [_label.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor constant:labelPaddingVertical],
       [_label.bottomAnchor constraintEqualToAnchor:_bubbleView.bottomAnchor constant:-labelPaddingVertical],
       [_label.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor constant:labelPaddingHorizontal],
     ]];
+    self.labelTopToBubbleConstraint = [_label.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor constant:labelPaddingVertical];
+    self.labelTopToBubbleConstraint.active = YES;
+    self.labelTopToImageConstraint = [_label.topAnchor constraintEqualToAnchor:_imageStackView.bottomAnchor constant:labelPaddingVertical];
     _labelTrailingConstraint = [_label.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor constant:-labelPaddingHorizontal];
     _labelTrailingConstraint.active = YES;
     
@@ -170,6 +176,8 @@
   
   BOOL hasImage = (image != nil);
   _minWidthConstraint.active = hasImage;
+  self.labelTopToBubbleConstraint.active = !hasImage;
+  self.labelTopToImageConstraint.active = hasImage;
 
   if (!hasImage) {
     return;
@@ -186,7 +194,6 @@
   imageView.clipsToBounds = YES;
   imageView.userInteractionEnabled = YES;
   imageView.tag = 0; // Only one image now
-  [imageView.widthAnchor constraintEqualToConstant:200.0].active = YES;
   [imageView.heightAnchor constraintEqualToConstant:200.0].active = YES;
   imageView.layer.cornerRadius = 20.0;
   imageView.layer.maskedCorners = kCALayerMinXMinYCorner | kCALayerMaxXMinYCorner;
