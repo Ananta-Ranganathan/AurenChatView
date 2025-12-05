@@ -259,16 +259,14 @@ UIColor *colorFromHex(const std::string &hex) {
   NSString *text = [NSString stringWithUTF8String:msg.text.c_str()];
   [cell configureWithText:text isUser:msg.isUser sameAsPrevious:sameAsPrevious readByCharacterAt:msg.readByCharacterAt      gradientStart:_botGradientStart gradientEnd:_botGradientEnd];
 
-  // Convert C++ images to NSArray
-  NSMutableArray<NSDictionary *> *images = [NSMutableArray new];
-  for (const auto &img : msg.images) {
-    NSMutableDictionary *dict = [NSMutableDictionary new];
-    if (!img.publicUrl.empty()) {
-      dict[@"public_url"] = [NSString stringWithUTF8String:img.publicUrl.c_str()];
-    }
-    [images addObject:dict];
+  // Convert C++ image to NSDictionary
+  NSDictionary *imageDict = nil;
+  if (!msg.image.publicUrl.empty()) {
+      imageDict = @{
+          @"public_url": [NSString stringWithUTF8String:msg.image.publicUrl.c_str()]
+      };
   }
-  [cell configureWithImages:images];
+  [cell configureWithImage:imageDict];
 
   // Set up tap callback to emit event
 //  NSString *messageUuid = [NSString stringWithUTF8String:msg.uuid.c_str()];
@@ -392,9 +390,8 @@ UIColor *colorFromHex(const std::string &hex) {
                                       attributes:@{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody]}
                                          context:nil];
     CGFloat imageHeight = 0;
-    if (msg.images.size() > 0) {
-        imageHeight = (200.0 * msg.images.size()) + (4.0 * (msg.images.size() - 1)) + 10.0;
-        // 200 per image + 4 spacing between images + 10 padding below images
+    if (!msg.image.publicUrl.empty()) {
+        imageHeight = 200.0 + 10.0; // 200 for image + 10 padding below
     }
 
     CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8.0 + verticalSpacing + imageHeight;

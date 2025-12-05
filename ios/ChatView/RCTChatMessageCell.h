@@ -13,7 +13,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface RCTChatMessageCell : UICollectionViewCell <UIContextMenuInteractionDelegate>
+@interface RCTChatMessageCell : UICollectionViewCell
 
 @property(nonatomic, strong) UIView *bubbleView;
 @property(nonatomic, strong) UILabel *label;
@@ -30,7 +30,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 - (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor*)gradientStart gradientEnd:(UIColor*)gradientEnd;
-- (void)configureWithImages:(NSArray<NSDictionary *> *)images;
+- (void)configureWithImage:(NSDictionary * _Nullable)image;
 
 @end
 

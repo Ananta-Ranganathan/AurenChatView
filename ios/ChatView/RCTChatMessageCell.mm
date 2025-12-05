@@ -51,7 +51,7 @@
     _imageStackView.axis = UILayoutConstraintAxisVertical;
     _imageStackView.spacing = 4.0;
     _imageStackView.alignment = UIStackViewAlignmentTrailing;
-    [_bubbleView addSubview:_imageStackView];
+    [self.contentView addSubview:_imageStackView];
 
     [_bubbleView addSubview:_label];
     [self.contentView addSubview:_bubbleView];
@@ -61,20 +61,18 @@
     const CGFloat labelPaddingVertical = 10.0;
     const CGFloat labelPaddingHorizontal = 16.0;
 
-    
-    _topConstraint = [_bubbleView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:bubbleVertical];
     _leadingConstraint = [_bubbleView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:bubbleHorizontal];
     _trailingConstraint = [_bubbleView.trailingAnchor constraintEqualToAnchor:self.contentView.trailingAnchor constant:-bubbleHorizontal];
 
     [NSLayoutConstraint activateConstraints:@[
-      _topConstraint,
       [_bubbleView.bottomAnchor constraintEqualToAnchor:self.contentView.bottomAnchor constant:-bubbleVertical],
-      // Image stack at top of bubble, full width, no horizontal padding (images go edge to edge)
-      [_imageStackView.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor],
+      [_imageStackView.topAnchor constraintEqualToAnchor:self.contentView.topAnchor constant:bubbleVertical],
       [_imageStackView.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor],
       [_imageStackView.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor],
-      // Label below images
-      [_label.topAnchor constraintEqualToAnchor:_imageStackView.bottomAnchor constant:labelPaddingVertical],
+      // Bubble sits below images
+      [_bubbleView.topAnchor constraintEqualToAnchor:_imageStackView.bottomAnchor constant:0],
+      // Label at top of bubble (no longer relative to imageStack)
+      [_label.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor constant:labelPaddingVertical],
       [_label.bottomAnchor constraintEqualToAnchor:_bubbleView.bottomAnchor constant:-labelPaddingVertical],
       [_label.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor constant:labelPaddingHorizontal],
     ]];
@@ -162,7 +160,7 @@
 }
 
 
-- (void)configureWithImages:(NSArray<NSDictionary *> *)images
+- (void)configureWithImage:(NSDictionary * _Nullable)image
 {
   // Clear existing image views
   for (UIView *subview in [_imageStackView.arrangedSubviews copy]) {
@@ -170,47 +168,43 @@
     [subview removeFromSuperview];
   }
   
-  _minWidthConstraint.active = (images.count > 0);
+  BOOL hasImage = (image != nil);
+  _minWidthConstraint.active = hasImage;
 
-  if (images.count == 0) {
+  if (!hasImage) {
     return;
   }
   
-  for (NSInteger i = 0; i < (NSInteger)images.count; i++) {
-    NSDictionary *imageData = images[i];
-    NSString *urlString = imageData[@"public_url"];
-    
-    if (!urlString) continue;
-    
-    UIImageView *imageView = [[UIImageView alloc] init];
-    imageView.translatesAutoresizingMaskIntoConstraints = NO;
-    imageView.contentMode = UIViewContentModeScaleAspectFill;
-    imageView.clipsToBounds = YES;
-    imageView.userInteractionEnabled = YES;
-    imageView.tag = i; // Store index for tap handler
-    [imageView.widthAnchor constraintEqualToConstant:200.0].active = YES;
-    [imageView.heightAnchor constraintEqualToConstant:200.0].active = YES;
-    imageView.layer.cornerRadius = 20.0;
-    imageView.layer.maskedCorners = kCALayerMinXMinYCorner | kCALayerMaxXMinYCorner;
-    
-    // Add tap gesture
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleImageTap:)];
-    [imageView addGestureRecognizer:tap];
-    
-    [_imageStackView addArrangedSubview:imageView];
-    
-    // Load image asynchronously
-    NSURL *url = [NSURL URLWithString:urlString];
-    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-      if (data && !error) {
-        UIImage *image = [UIImage imageWithData:data];
-        dispatch_async(dispatch_get_main_queue(), ^{
-          imageView.image = image;
-        });
-      }
-    }];
-    [task resume];
+  NSString *urlString = image[@"public_url"];
+  if (!urlString) {
+    return;
   }
+
+  UIImageView *imageView = [[UIImageView alloc] init];
+  imageView.translatesAutoresizingMaskIntoConstraints = NO;
+  imageView.contentMode = UIViewContentModeScaleAspectFill;
+  imageView.clipsToBounds = YES;
+  imageView.userInteractionEnabled = YES;
+  imageView.tag = 0; // Only one image now
+  [imageView.widthAnchor constraintEqualToConstant:200.0].active = YES;
+  [imageView.heightAnchor constraintEqualToConstant:200.0].active = YES;
+  imageView.layer.cornerRadius = 20.0;
+  imageView.layer.maskedCorners = kCALayerMinXMinYCorner | kCALayerMaxXMinYCorner;
+
+  UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleImageTap:)];
+  [imageView addGestureRecognizer:tap];
+  [_imageStackView addArrangedSubview:imageView];
+
+  NSURL *url = [NSURL URLWithString:urlString];
+  NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+    if (data && !error) {
+      UIImage *downloadedImage = [UIImage imageWithData:data];
+      dispatch_async(dispatch_get_main_queue(), ^{
+        imageView.image = downloadedImage;
+      });
+    }
+  }];
+  [task resume];
 }
 
 - (void)handleImageTap:(UITapGestureRecognizer *)recognizer

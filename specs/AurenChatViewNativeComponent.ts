@@ -19,7 +19,7 @@ export interface Message {
   isUser: boolean;
   readByCharacterAt?: CodegenTypes.Double;
   isTypingIndicator?: boolean;
-  images?: ImageData[];
+  image?: ImageData;
 }
 
 export interface NativeProps extends ViewProps {

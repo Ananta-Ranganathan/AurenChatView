@@ -52,13 +52,11 @@ function AppContent() {
     {
       uuid: '2',
       isUser: true,
-      text: '',
-      images: [
-        {
-          publicUrl:
-            'https://www.nme.com/wp-content/uploads/2024/01/le-sserafim-huh-yun-jin-solo-single-past-versions.jpg',
-        },
-      ],
+      text: 'dont you think glasses are great this photo doesnt have glasses',
+      image: {
+        publicUrl:
+          'https://www.nme.com/wp-content/uploads/2024/01/le-sserafim-huh-yun-jin-solo-single-past-versions.jpg',
+      },
     },
     {
       uuid: '3',
@@ -69,6 +67,15 @@ function AppContent() {
       uuid: '4',
       isUser: true,
       text: 'what the fuck are you even talking about big dog',
+    },
+    {
+      uuid: '6',
+      isUser: false,
+      text: 'dont worry about it baby doll',
+      image: {
+        publicUrl:
+          'https://www.nme.com/wp-content/uploads/2024/01/le-sserafim-huh-yun-jin-solo-single-past-versions.jpg',
+      },
     },
   ];
   const [messages, setMessages] = useState(initialMessages);
