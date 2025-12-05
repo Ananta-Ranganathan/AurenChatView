@@ -257,7 +257,14 @@ UIColor *colorFromHex(const std::string &hex) {
   }
 
   NSString *text = [NSString stringWithUTF8String:msg.text.c_str()];
-  [cell configureWithText:text isUser:msg.isUser sameAsPrevious:sameAsPrevious readByCharacterAt:msg.readByCharacterAt      gradientStart:_botGradientStart gradientEnd:_botGradientEnd];
+  NSString *reaction = [NSString stringWithUTF8String:msg.reaction.c_str()];
+  [cell configureWithText:text
+                   isUser:msg.isUser
+           sameAsPrevious:sameAsPrevious
+       readByCharacterAt:msg.readByCharacterAt
+            gradientStart:_botGradientStart
+              gradientEnd:_botGradientEnd
+                 reaction:reaction];
 
   // Convert C++ image to NSDictionary
   NSDictionary *imageDict = nil;

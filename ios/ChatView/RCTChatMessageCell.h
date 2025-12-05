@@ -27,9 +27,14 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UIStackView *imageStackView;
 @property (nonatomic, copy) void (^onImageTapped)(NSInteger imageIndex, CGRect frameInWindow);
 @property (nonatomic, strong) NSLayoutConstraint *minWidthConstraint;
+@property (nonatomic, strong) UIView *reactionContainer;
+@property (nonatomic, strong) UILabel *reactionLabel;
+@property (nonatomic, strong) NSLayoutConstraint *reactionLeadingConstraint;
+@property (nonatomic, strong) NSLayoutConstraint *reactionTrailingConstraint;
+@property (nonatomic, strong) NSLayoutConstraint *reactionTopConstraint;
 
 
-- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor*)gradientStart gradientEnd:(UIColor*)gradientEnd;
+- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor*)gradientStart gradientEnd:(UIColor*)gradientEnd reaction:(NSString *)reaction;
 - (void)configureWithImage:(NSDictionary * _Nullable)image;
 
 @end

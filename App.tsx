@@ -67,7 +67,18 @@ function AppContent() {
       uuid: '4',
       isUser: true,
       text: 'what the fuck are you even talking about big dog',
+      // reaction: '❤️',
+    },
+    {
+      uuid: '5',
+      isUser: true,
+      text: 'what the fuck are you even talking about big dog',
       reaction: '❤️',
+    },
+    {
+      uuid: '67',
+      isUser: true,
+      text: 'what the fuck are you even talking about big dog',
     },
     {
       uuid: '6',

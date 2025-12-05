@@ -101,6 +101,45 @@
       [_readReceiptImageView.widthAnchor constraintEqualToConstant:14.0],
       [_readReceiptImageView.heightAnchor constraintEqualToConstant:14.0],
     ]];
+
+    _reactionContainer = [UIView new];
+    _reactionContainer.translatesAutoresizingMaskIntoConstraints = NO;
+    _reactionContainer.backgroundColor = [[UIColor whiteColor] colorWithAlphaComponent:0.9];
+    _reactionContainer.layer.cornerRadius = 12.0;
+    _reactionContainer.layer.masksToBounds = NO;
+    _reactionContainer.layer.shadowColor = [UIColor colorWithWhite:0.0 alpha:0.15].CGColor;
+    _reactionContainer.layer.shadowOpacity = 1.0;
+    _reactionContainer.layer.shadowOffset = CGSizeMake(0, 1);
+    _reactionContainer.layer.shadowRadius = 4.0;
+
+    _reactionLabel = [UILabel new];
+    _reactionLabel.translatesAutoresizingMaskIntoConstraints = NO;
+    _reactionLabel.font = [UIFont systemFontOfSize:14.0 weight:UIFontWeightSemibold];
+    _reactionLabel.textColor = [UIColor blackColor];
+
+    [_reactionContainer addSubview:_reactionLabel];
+    [NSLayoutConstraint activateConstraints:@[
+      [_reactionLabel.topAnchor constraintEqualToAnchor:_reactionContainer.topAnchor constant:4.0],
+      [_reactionLabel.bottomAnchor constraintEqualToAnchor:_reactionContainer.bottomAnchor constant:-4.0],
+      [_reactionLabel.leadingAnchor constraintEqualToAnchor:_reactionContainer.leadingAnchor constant:4.0],
+      [_reactionLabel.trailingAnchor constraintEqualToAnchor:_reactionContainer.trailingAnchor constant:-4.0],
+    ]];
+
+    [self.contentView addSubview:_reactionContainer];
+    _reactionTopConstraint = [_reactionContainer.topAnchor constraintEqualToAnchor:_bubbleView.topAnchor constant:-6.0];
+    _reactionLeadingConstraint = [_reactionContainer.leadingAnchor constraintEqualToAnchor:_bubbleView.leadingAnchor constant:-6.0];
+    _reactionTrailingConstraint = [_reactionContainer.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor constant:6.0];
+    [NSLayoutConstraint activateConstraints:@[
+      _reactionTopConstraint,
+    ]];
+    NSLayoutConstraint *reactionHeight = [_reactionContainer.heightAnchor constraintGreaterThanOrEqualToConstant:24.0];
+    reactionHeight.active = YES;
+    NSLayoutConstraint *reactionWidth = [_reactionContainer.widthAnchor constraintGreaterThanOrEqualToAnchor:_reactionContainer.heightAnchor];
+    reactionWidth.active = YES;
+    _reactionLeadingConstraint.active = YES;
+    _reactionTrailingConstraint.active = NO;
+
+    _reactionContainer.hidden = YES;
   }
   return self;
 }
@@ -126,7 +165,7 @@
   self.gradientLayer.frame = _bubbleView.bounds;
 }
 
-- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor *)gradientStart gradientEnd:(UIColor *)gradientEnd
+- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor *)gradientStart gradientEnd:(UIColor *)gradientEnd reaction:(NSString *)reaction
 {
   NSLog(@"configure bubbleView.bounds: %@", NSStringFromCGRect(_bubbleView.bounds));
 
@@ -157,6 +196,14 @@
   } else {
     self.readReceiptImageView.hidden = YES;
   }
+
+  BOOL hasReaction = reaction.length > 0;
+  self.reactionContainer.hidden = !hasReaction;
+  self.reactionLabel.text = reaction;
+  self.reactionLeadingConstraint.active = isUser;
+  self.reactionTrailingConstraint.active = !isUser;
+  self.reactionTopConstraint.constant = hasReaction ? -6.0 : 0.0;
+
   self.labelTrailingConstraint.constant = isUser ? -24.0 : -16.0;
   self.topConstraint.constant = sameAsPrevious ? 2.0 : 12.0;
 
