@@ -63,7 +63,7 @@
 
     const CGFloat bubbleVertical = 4.0;
     const CGFloat bubbleHorizontal = 16.0;
-    const CGFloat labelPaddingVertical = 10.0;
+    const CGFloat labelPaddingVertical = 8.0;
     const CGFloat labelPaddingHorizontal = 16.0;
 
     _leadingConstraint = [_bubbleView.leadingAnchor constraintEqualToAnchor:self.contentView.leadingAnchor constant:bubbleHorizontal];
@@ -165,7 +165,14 @@
   self.gradientLayer.frame = _bubbleView.bounds;
 }
 
-- (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor *)gradientStart gradientEnd:(UIColor *)gradientEnd reaction:(NSString *)reaction
+- (void)configureWithText:(NSString *)text
+                   isUser:(BOOL)isUser
+           sameAsPrevious:(BOOL)sameAsPrevious
+       readByCharacterAt:(double)readByCharacterAt
+            gradientStart:(UIColor *)gradientStart
+              gradientEnd:(UIColor *)gradientEnd
+                 reaction:(NSString *)reaction
+               themeColor:(UIColor *)themeColor
 {
   NSLog(@"configure bubbleView.bounds: %@", NSStringFromCGRect(_bubbleView.bounds));
 
@@ -200,6 +207,15 @@
   BOOL hasReaction = reaction.length > 0;
   self.reactionContainer.hidden = !hasReaction;
   self.reactionLabel.text = reaction;
+  UIColor *reactionBackground = themeColor ?: [UIColor whiteColor];
+  CGFloat r = 0, g = 0, b = 0, a = 0;
+  if ([reactionBackground getRed:&r green:&g blue:&b alpha:&a]) {
+    // Avoid pure black; use a slightly lifted dark tone instead.
+    if (r < 0.02 && g < 0.02 && b < 0.02) {
+      reactionBackground = [UIColor colorWithRed:0.118 green:0.118 blue:0.118 alpha:1.0];
+    }
+  }
+  self.reactionContainer.backgroundColor = reactionBackground;
   self.reactionLeadingConstraint.active = isUser;
   self.reactionTrailingConstraint.active = !isUser;
   self.reactionTopConstraint.constant = hasReaction ? -6.0 : 0.0;

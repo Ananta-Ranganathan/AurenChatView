@@ -31,6 +31,7 @@ using namespace facebook::react;
   std::unordered_set<std::string> _animatedMessageClientIDs;
   UIColor *_botGradientStart;
   UIColor *_botGradientEnd;
+  UIColor *_themeBaseColor;
 }
 
 - (instancetype)init
@@ -113,12 +114,14 @@ UIColor *colorFromHex(const std::string &hex) {
       *std::static_pointer_cast<AurenChatViewProps const>(props);
   
   _collectionView.backgroundColor = colorFromHex(newViewProps.theme.mode);
+  _themeBaseColor = colorFromHex(newViewProps.theme.mode);
   _botGradientStart = colorFromHex(newViewProps.theme.color1);
   _botGradientEnd = colorFromHex(newViewProps.theme.color2);
   if (oldProps) {
       const auto &oldViewProps = *std::static_pointer_cast<AurenChatViewProps const>(oldProps);
       if (oldViewProps.theme.color1 != newViewProps.theme.color1 ||
-          oldViewProps.theme.color2 != newViewProps.theme.color2) {
+          oldViewProps.theme.color2 != newViewProps.theme.color2 ||
+          oldViewProps.theme.mode != newViewProps.theme.mode) {
           [_collectionView reloadData];
       }
   }
@@ -264,7 +267,8 @@ UIColor *colorFromHex(const std::string &hex) {
        readByCharacterAt:msg.readByCharacterAt
             gradientStart:_botGradientStart
               gradientEnd:_botGradientEnd
-                 reaction:reaction];
+                 reaction:reaction
+               themeColor:_themeBaseColor];
 
   // Convert C++ image to NSDictionary
   NSDictionary *imageDict = nil;

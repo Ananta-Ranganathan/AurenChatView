@@ -94,7 +94,7 @@ function AppContent() {
   const [draftText, setDraftText] = useState('');
 
   const addMessage = () => {
-    const randomNumber = Math.floor(Math.random() * 4);
+    const randomNumber = Math.floor(Math.random() * 7);
     const pendingMsg = {
       ...messages[randomNumber],
       uuid: (Math.random() + 1).toString(36).substring(7),
@@ -121,12 +121,17 @@ function AppContent() {
   const themeKeys = Object.keys(gradientThemes);
   const [themeIndex, setThemeIndex] = useState(0);
   const [theme, setTheme] = useState(themeKeys[0]);
+  const [mode, setMode] = useState<'#000000' | '#FFFFFF'>('#000000');
 
   const stepTheme = () => {
     console.log(theme);
     const nextIndex = (themeIndex + 1) % themeKeys.length;
     setThemeIndex(nextIndex);
     setTheme(themeKeys[nextIndex]);
+  };
+
+  const toggleMode = () => {
+    setMode(prevMode => (prevMode === '#000000' ? '#FFFFFF' : '#000000'));
   };
 
   return (
@@ -140,7 +145,7 @@ function AppContent() {
         <AurenChatViewNativeComponent
           messages={messages}
           theme={{
-            mode: '#000000',
+            mode,
             color1: gradientThemes[theme][0],
             color2: gradientThemes[theme][1],
           }}
@@ -162,6 +167,7 @@ function AppContent() {
         <View style={styles.buttonsRow}>
           <Button title="dismiss" onPress={() => Keyboard.dismiss()} />
           <Button title="theme" onPress={stepTheme} />
+          <Button title="mode" onPress={toggleMode} />
           <Button title="add" onPress={addMessage} />
         </View>
       </KeyboardAvoidingView>
