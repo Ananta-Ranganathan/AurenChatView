@@ -115,8 +115,6 @@ UIColor *colorFromHex(const std::string &hex) {
   _collectionView.backgroundColor = colorFromHex(newViewProps.theme.mode);
   _botGradientStart = colorFromHex(newViewProps.theme.color1);
   _botGradientEnd = colorFromHex(newViewProps.theme.color2);
-  NSLog(@"botgradientstart: %s", newViewProps.theme.color1.c_str());
-  NSLog(@"botgradientend: %s", newViewProps.theme.color2.c_str());
   if (oldProps) {
       const auto &oldViewProps = *std::static_pointer_cast<AurenChatViewProps const>(oldProps);
       if (oldViewProps.theme.color1 != newViewProps.theme.color1 ||
@@ -393,8 +391,13 @@ UIColor *colorFromHex(const std::string &hex) {
                                          options:NSStringDrawingUsesLineFragmentOrigin
                                       attributes:@{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody]}
                                          context:nil];
-    
-    CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8.0 + verticalSpacing;
+    CGFloat imageHeight = 0;
+    if (msg.images.size() > 0) {
+        imageHeight = (200.0 * msg.images.size()) + (4.0 * (msg.images.size() - 1)) + 10.0;
+        // 200 per image + 4 spacing between images + 10 padding below images
+    }
+
+    CGFloat cellHeight = ceil(textRect.size.height) + 2 * labelPaddingVertical + 8.0 + verticalSpacing + imageHeight;
     
     return CGSizeMake(contentWidth, cellHeight);
   }

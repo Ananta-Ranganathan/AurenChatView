@@ -115,6 +115,9 @@
     _gradientLayer.startPoint = CGPointMake(0, 0);
     _gradientLayer.endPoint = CGPointMake(1, 1);
   }
+  // Force layout so gradient layer gets correct frame immediately
+  [self setNeedsLayout];
+  [self layoutIfNeeded];
 }
 
 - (void)startAnimating

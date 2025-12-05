@@ -50,7 +50,7 @@
     _imageStackView.translatesAutoresizingMaskIntoConstraints = NO;
     _imageStackView.axis = UILayoutConstraintAxisVertical;
     _imageStackView.spacing = 4.0;
-    _imageStackView.alignment = UIStackViewAlignmentFill;
+    _imageStackView.alignment = UIStackViewAlignmentTrailing;
     [_bubbleView addSubview:_imageStackView];
 
     [_bubbleView addSubview:_label];
@@ -80,9 +80,6 @@
     ]];
     _labelTrailingConstraint = [_label.trailingAnchor constraintEqualToAnchor:_bubbleView.trailingAnchor constant:-labelPaddingHorizontal];
     _labelTrailingConstraint.active = YES;
-    UIContextMenuInteraction *interaction =
-        [[UIContextMenuInteraction alloc] initWithDelegate:self];
-    [_bubbleView addInteraction:interaction];
     
     self.gradientLayer = [CAGradientLayer layer];
     self.gradientLayer.cornerRadius = 20.0;
@@ -113,6 +110,7 @@
 - (void)layoutSubviews
 {
   [super layoutSubviews];
+  NSLog(@"layoutSubviews bubbleView.bounds: %@", NSStringFromCGRect(_bubbleView.bounds));
 
   CGFloat contentWidth = self.contentView.bounds.size.width;
   CGFloat maxBubbleWidth = contentWidth * 0.75;
@@ -126,6 +124,8 @@
 
 - (void)configureWithText:(NSString *)text isUser:(BOOL)isUser sameAsPrevious:(BOOL)sameAsPrevious readByCharacterAt:(double)readByCharacterAt gradientStart:(UIColor *)gradientStart gradientEnd:(UIColor *)gradientEnd
 {
+  NSLog(@"configure bubbleView.bounds: %@", NSStringFromCGRect(_bubbleView.bounds));
+
   self.label.text = text;
   self.label.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
   
@@ -139,8 +139,6 @@
     self.trailingConstraint.active = NO;
     self.gradientLayer.hidden = NO;
     self.bubbleView.backgroundColor = [UIColor clearColor];
-    NSLog(@"gradientStart: %@, gradientEnd: %@", gradientStart, gradientEnd);
-    NSLog(@"bubbleView.bounds: %@", NSStringFromCGRect(_bubbleView.bounds));
     self.gradientLayer.colors = @[
         (id)gradientStart.CGColor,
         (id)gradientEnd.CGColor,
@@ -160,24 +158,9 @@
 
   [self layoutIfNeeded];
   self.gradientLayer.frame = _bubbleView.bounds;
+  NSLog(@"configure bubbleView.bounds: %@", NSStringFromCGRect(_bubbleView.bounds));
 }
 
-- (UIContextMenuConfiguration *)contextMenuInteraction:(UIContextMenuInteraction *)interaction
-                        configurationForMenuAtLocation:(CGPoint)location
-{
-    return [UIContextMenuConfiguration
-        configurationWithIdentifier:nil
-                    previewProvider:nil
-                     actionProvider:^UIMenu *(NSArray<UIMenuElement *> *suggestedActions) {
-        UIAction *copy = [UIAction actionWithTitle:@"Copy"
-                                             image:[UIImage systemImageNamed:@"doc.on.doc"]
-                                        identifier:nil
-                                           handler:^(UIAction *action) {
-            UIPasteboard.generalPasteboard.string = self.label.text;
-        }];
-        return [UIMenu menuWithTitle:@"" children:@[copy]];
-    }];
-}
 
 - (void)configureWithImages:(NSArray<NSDictionary *> *)images
 {
@@ -196,8 +179,6 @@
   for (NSInteger i = 0; i < (NSInteger)images.count; i++) {
     NSDictionary *imageData = images[i];
     NSString *urlString = imageData[@"public_url"];
-    NSNumber *width = imageData[@"processed_width"];
-    NSNumber *height = imageData[@"processed_height"];
     
     if (!urlString) continue;
     
@@ -207,15 +188,10 @@
     imageView.clipsToBounds = YES;
     imageView.userInteractionEnabled = YES;
     imageView.tag = i; // Store index for tap handler
-    
-    // Calculate aspect ratio for height constraint
-    CGFloat aspectRatio = 1.0;
-    if (width && height && [width floatValue] > 0) {
-      aspectRatio = [height floatValue] / [width floatValue];
-    }
-    
-    // Constrain height based on aspect ratio
-    [imageView.heightAnchor constraintEqualToAnchor:imageView.widthAnchor multiplier:aspectRatio].active = YES;
+    [imageView.widthAnchor constraintEqualToConstant:200.0].active = YES;
+    [imageView.heightAnchor constraintEqualToConstant:200.0].active = YES;
+    imageView.layer.cornerRadius = 20.0;
+    imageView.layer.maskedCorners = kCALayerMinXMinYCorner | kCALayerMaxXMinYCorner;
     
     // Add tap gesture
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleImageTap:)];
